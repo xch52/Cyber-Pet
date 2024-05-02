@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
-import MarketPage from "./pages/MarketPage";
+import AuctionMarket from "./pages/AuctionMarket";
+import FreeMarket from "./pages/FreeMarket";
 import GashPage from "./pages/GashPage";
 import PortPage from "./pages/PortPage";
 import { useEffect } from 'react';
@@ -15,7 +16,8 @@ export default function App() {
     <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/Market" element={<MarketPage />} />
+        <Route path="/AuctionMarket" element={<AuctionMarket />} />
+        <Route path="/FreeMarket" element={<FreeMarket />} />
         <Route path="/Gashapon" element={<GashPage />} />
         <Route path="/Portfolio" element={<PortPage />} />
       </Routes>

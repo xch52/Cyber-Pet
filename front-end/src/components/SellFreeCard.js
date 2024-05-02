@@ -4,16 +4,15 @@ import { Button, CardActionArea, CardActions } from '@mui/material';
 import { useState, useEffect } from 'react';
 import StarIcon from '@mui/icons-material/Star';
 import { Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { ethers } from 'ethers';
 
 
-export default function SellCard({ image, title, petclass, attribute, description, price, prebid, states, deadline, alt }) {
+export default function SellCard({ image, title, petclass, attribute, description, price, states, deadline, alt }) {
 
     // 定义各种状态变量
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
     const [open, setOpen] = useState(false);
-    const [bidOpen, setBidOpen] = useState(false);
-    const [bidAmount, setBidAmount] = useState('');
-    const [bidError, setBidError] = useState('');
+
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -58,28 +57,23 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
         ));
     };
 
-    // 宠物出价按钮
-    const bidClick = () => {
-        setBidOpen(true);
-    };
-    
-    const bidClose = () => {
-        setBidOpen(false);
-    };
-    
-    const bidSubmit = () => {
-        const bidValue = parseFloat(bidAmount);
-        const currentPrice = parseFloat(price);
-    
-        if (bidValue <= currentPrice) {
-            setBidError('Your bid must be higher than the current bid price.');
-            return;
+    // 控制购买按钮
+    const buyItem = async () => {
+        try {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            await provider.send("eth_requestAccounts", []);
+            const signer = provider.getSigner();
+            const transaction = {
+                to: 'YOUR_CONTRACT_ADDRESS', // 合约地址
+                value: ethers.utils.parseEther(price.toString()) // 金额转换为Wei
+            };
+
+            const tx = await signer.sendTransaction(transaction);
+            console.log('Transaction:', tx);
+        } catch (error) {
+            console.error('Purchase failed:', error);
         }
-    
-        console.log("Bid submitted:", bidAmount); // 这里添加实际提交出价到服务器的逻辑
-        setBidOpen(false);
-        setBidError(''); // 清除错误信息
-    };
+    }
 
 
     return (
@@ -128,9 +122,9 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         padding: '8px 30px',
                         fontSize: '1rem',
                     }}
-                    onClick={bidClick}
+                    onClick={buyItem}
                 >
-                    Bid
+                    Buy
                 </Button>
 
             </CardActions>
@@ -173,51 +167,19 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         <Typography variant="h6">
                             Status: {states === '1' ? 'On Sale' : 'Sold Out'}
                         </Typography>
-                        <Typography variant="h6" style={{ marginTop: '20px' }}>
+
+                        {/* 一口价模式下不再需要展示历史出价 */}
+                        {/* <Typography variant="h6" style={{ marginTop: '20px' }}>
                             Previous Bids (from previous to latest):
                         </Typography>
                         {prebid.map((bid, index) => (
                             <Typography key={index} variant="h6">{`${index + 1}. ${bid} ETH`}</Typography>
-                        ))}
+                        ))} */}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={InfoClose} color="primary" autoFocus>
                         Close
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* 控制出价框 */}
-            <Dialog
-                open={bidOpen}
-                onClose={bidClose}
-            >
-                <DialogTitle>Enter Your Bid</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Please enter your bid amount for this pet.
-                    </DialogContentText>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        id="name"
-                        label="Bid Amount (ETH)"
-                        type="text"
-                        fullWidth
-                        variant="standard"
-                        value={bidAmount}
-                        onChange={e => setBidAmount(e.target.value)}
-                        error={!!bidError}
-                        helperText={bidError}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={bidClose} color="primary" variant="outlined" sx={{ margin: '8px' }}>
-                        Cancel
-                    </Button>
-                    <Button onClick={bidSubmit} color="primary" variant="outlined" sx={{ margin: '8px' }}>
-                        Submit
                     </Button>
                 </DialogActions>
             </Dialog>

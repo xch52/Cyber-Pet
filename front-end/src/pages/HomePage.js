@@ -2,18 +2,12 @@ import * as React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import XIcon from '@mui/icons-material/X';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Header from '../components/Header';
 import MainFeaturedPost from '../components/MainFeaturedPost';
 import FeaturedPost from '../components/FeaturedPost';
-import Main from '../components/Main';
-import Sidebar from '../components/Sidebar';
 import Footer from '../components/Footer';
 import HomeDesk from '../assets/HomeDesk.jpg';
-import Typography from '@mui/material/Typography';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // Image Source: https://lexica.art/prompt/aa863c1a-adc6-4ec3-a448-afba14d74fc3
 import HomeExample1 from '../assets/HomeExample1.jpg';
@@ -22,12 +16,13 @@ import HomeExample2 from '../assets/HomeExample2.jpg';
 // Image Source: https://lexica.art/prompt/aa863c1a-adc6-4ec3-a448-afba14d74fc3
 
 const sections = [
-    { title: 'Home', url: '/' },
-    { title: 'Market', url: '/Market' },
-    { title: 'Gashapon', url: '/Gashapon' },
-    { title: 'Portfolio', url: '/Portfolio' },
-    { title: 'About us', url: '#' }
-  ];
+  { title: 'Home', url: '/' },
+  { title: 'AuctionMarket', url: '/AuctionMarket' },
+  { title: 'FreeMarket', url: '/FreeMarket' },
+  { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'Portfolio', url: '/Portfolio' },
+  //{ title: 'About us', url: '#' }
+];
 
 const mainFeaturedPost = {
   title: 'CyberPet—An incredible tamagotchi game',
@@ -40,7 +35,7 @@ const mainFeaturedPost = {
 
 const featuredPosts = [
   {
-    title: 'Free market',
+    title: 'Amazing market',
     date: 'Nov 12',
     description:
       'In this market, you can trade your pets freely. When you find a pet you love, you can buy it without hesitation. You can also sell your pets according to your own preferences.',

@@ -19,13 +19,13 @@ import ShowCard from '../components/ShowCard';
 
 
 const sections = [
-    { title: 'Home', url: '/' },
-    { title: 'Market', url: '/Market' },
-    { title: 'Gashapon', url: '/Gashapon' },
-    { title: 'Portfolio', url: '/Portfolio' },
-    { title: 'About us', url: '#' }
-  ];
-
+  { title: 'Home', url: '/' },
+  { title: 'AuctionMarket', url: '/AuctionMarket' },
+  { title: 'FreeMarket', url: '/FreeMarket' },
+  { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'Portfolio', url: '/Portfolio' },
+  //{ title: 'About us', url: '#' }
+];
 const defaultTheme = createTheme();
 
 const products = [
