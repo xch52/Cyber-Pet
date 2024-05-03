@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: dev
+  main:
+    allow-circular-references: true
+    allow-bean-definition-overriding: true
+    web-application-type: none
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017
+      database: mydatabase
+
