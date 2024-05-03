@@ -40,7 +40,7 @@ const products = [
   // 可以根据需要添加更多商品
 ];
 
-export default function Blog() {
+export default function PortPage() {
     return (
       <ThemeProvider theme={defaultTheme}>
         <CssBaseline />

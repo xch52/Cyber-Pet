@@ -139,7 +139,7 @@ const sidebar = {
 };
 
 
-export default function MarketPage() {
+export default function FreeMarket() {
 
   const [showClass1, setShowClass1] = useState(false);
   const [showClass2, setShowClass2] = useState(false);
@@ -197,7 +197,7 @@ export default function MarketPage() {
         <main>
 
           <Grid container spacing={5} sx={{ mt: 3 }}>
-            {/* Sidebar Grid item */}
+            {/* 侧边栏显示卡 */}
             <Grid item xs={12} md={3}>  {/* Adjust md value to change the width of the sidebar */}
               <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
                 <Typography variant="h6" gutterBottom>

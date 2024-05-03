@@ -15,7 +15,8 @@ function Header(props) {
   const [isConnected, setIsConnected] = useState(false);
   const [account, setAccount] = useState('');
 
-  const handleConnectWallet = async () => {
+  // 连接 MetaMask 钱包
+  const connectWallet = async () => {
     if (window.ethereum) {
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -52,9 +53,13 @@ function Header(props) {
   return (
     <React.Fragment>
       <Toolbar sx={{ borderBottom: 1, borderColor: 'divider', mt: 1, mb: 1 }}>
+
+        {/* 显示网站小图标 */}
         <IconButton edge="start" color="inherit" aria-label="logo">
           <img src={HomeIcon} alt="logo" style={{ height: '50px' }} />
         </IconButton>
+
+        {/* 显示网站名 */}
         <Typography
           component="h2"
           variant="h4"
@@ -65,13 +70,20 @@ function Header(props) {
         >
           {title}
         </Typography>
+
+        {/* 搜索按钮，目前无功能 */}
         <IconButton>
           <SearchIcon />
         </IconButton>
-        <Button variant="outlined" size="small" onClick={handleConnectWallet}>
+
+        {/* 连接钱包按钮 */}
+        <Button variant="outlined" size="small" onClick={connectWallet}>
           {isConnected ? "Connected!" : "Wallet"}
         </Button>
+        
       </Toolbar>
+
+      {/* 导航栏按钮显示 */}
       <Toolbar
         component="nav"
         variant="dense"

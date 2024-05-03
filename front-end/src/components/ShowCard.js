@@ -13,55 +13,59 @@ import DialogTitle from '@mui/material/DialogTitle';
 import SellWindow from '../components/SellWindow';
 
 export default function ShowCard({ image, title, description, price, alt }) {
-    const [openFeed, setOpenFeed] = useState(false);
-    const [openSell, setOpenSell] = useState(false);
-  
-    const handleOpenSell = () => {
-      setOpenSell(true);
-    };
-  
-    const handleCloseSell = () => {
-      setOpenSell(false);
-    };
-  
-    return (
-      <Card sx={{ maxWidth: 300 }}>
-        <CardActionArea>
-          <CardMedia
-            component="img"
-            height="250"
-            image={image}
-            alt={alt}
-          />
-          <CardContent>
-            <Typography gutterBottom variant="h5" component="div">
-              {title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {description}
-            </Typography>
-          </CardContent>
-        </CardActionArea>
-        <CardActions sx={{ justifyContent: 'space-between' }}>
-  
-          <Button
-            size="large"
-            color="primary"
-            onClick={handleOpenSell}
-            sx={{
-              flexGrow: 1,  
-              border: '2px solid',
-              borderColor: 'primary.main',
-              fontSize: '1rem',
-            }}
-          >
-            Sell
-          </Button>
-          <Dialog open={openSell} onClose={handleCloseSell} fullWidth>
+  const [openFeed, setOpenFeed] = useState(false);
+  const [openSell, setOpenSell] = useState(false);
+
+  const clickOpenSell = () => {
+    setOpenSell(true);
+  };
+
+  const clickCloseSell = () => {
+    setOpenSell(false);
+  };
+
+  return (
+    <Card sx={{ maxWidth: 300 }}>
+
+      {/* 宠物信息展示 */}
+      <CardActionArea>
+        <CardMedia
+          component="img"
+          height="250"
+          image={image}
+          alt={alt}
+        />
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="div">
+            {title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {description}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+
+      {/* 售卖按钮 */}
+      <CardActions sx={{ justifyContent: 'space-between' }}>
+        <Button
+          size="large"
+          color="primary"
+          onClick={clickOpenSell}
+          sx={{
+            flexGrow: 1,
+            border: '2px solid',
+            borderColor: 'primary.main',
+            fontSize: '1rem',
+          }}
+        >
+          Sell
+        </Button>
+        <Dialog open={openSell} onClose={clickCloseSell} fullWidth>
+
           {/* SellWindow组件被用作对话框内容 */}
           <SellWindow />
         </Dialog>
-        </CardActions>
-      </Card>
-    );
-  }
+      </CardActions>
+    </Card>
+  );
+}

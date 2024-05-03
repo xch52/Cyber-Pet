@@ -12,6 +12,9 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+
 
 function Copyright(props) {
   return (
@@ -36,16 +39,24 @@ export default function SellWindows() {
   const [duration, setDuration] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [isCheckboxChecked, setIsCheckboxChecked] = React.useState(false);
+  const [saleType, setSaleType] = React.useState('auction');
 
   const isFormFilled = price && duration && description && isCheckboxChecked;
 
-  const handleSubmit = (event) => {
+  const clickSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     console.log({
       price: data.get('price'),
       description: data.get('description'),
+      saleType: saleType,
     });
+  };
+
+  const saleTypeChange = (event, newSaleType) => {
+    if (newSaleType !== null) {
+      setSaleType(newSaleType);
+    }
   };
 
   return (
@@ -66,7 +77,33 @@ export default function SellWindows() {
           <Typography component="h1" variant="h5">
             Transaction
           </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+          <Box component="form" onSubmit={clickSubmit} noValidate sx={{ mt: 1 }}>
+
+            {/* 交易类型选择 */}
+            <Grid container alignItems="center" spacing={2}>
+              <Grid item>
+                <Typography component="h6" variant="subtitle1">
+                  Sale Type :
+                </Typography>
+              </Grid>
+              <Grid item>
+                <ToggleButtonGroup
+                  color="primary"
+                  value={saleType}
+                  exclusive
+                  onChange={saleTypeChange}
+                >
+                  <ToggleButton value="auction" sx={{ width: 150 }}>
+                    Auction
+                  </ToggleButton>
+                  <ToggleButton value="normal" sx={{ width: 150 }}>
+                    Normal
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Grid>
+            </Grid>
+
+            {/* 起拍价与时间输入框 */}
             <Grid container spacing={2}>
               <Grid item xs={6}>
                 <TextField
@@ -96,6 +133,8 @@ export default function SellWindows() {
                 />
               </Grid>
             </Grid>
+
+            {/* 描述输入框 */}
             <TextField
               margin="normal"
               required
@@ -108,10 +147,14 @@ export default function SellWindows() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
+
+            {/* 承诺勾选框 */}
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" checked={isCheckboxChecked} onChange={(e) => setIsCheckboxChecked(e.target.checked)} />}
               label="I've known the rules in the market."
             />
+
+            {/* 创建交易按钮 */}
             <Button
               type="submit"
               fullWidth
@@ -119,7 +162,7 @@ export default function SellWindows() {
               sx={{ mt: 3, mb: 2 }}
               disabled={!isFormFilled}
             >
-              Create Auction
+              Create Transaction
             </Button>
             <Grid container>
               <Grid item xs>
