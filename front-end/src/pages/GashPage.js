@@ -32,25 +32,12 @@ const sections = [
 
 const itemData = [
   {
-    img: HomeExample1,
+    img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
     title: 'Cat1',
   },
   {
-    img: HomeExample2,
+    img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
     title: 'Dog1',
-  },
-  {
-    img: GaExample1,
-    title: 'Cat2',
-  },
-  {
-    img: GaExample2,
-    title: 'Dog2',
-  },
-  {
-    img: HomeExample1,
-    title: 'Camera',
-    le: 'Mushrooms',
   },
 ];
 
@@ -156,8 +143,7 @@ export default function GashPage() {
             {itemData.map((item) => (
               <ImageListItem key={item.img}>
                 <img
-                  srcSet={`${item.img}?w=164&h=164&fit=crop&auto=format&dpr=2 2x`}
-                  src={`${item.img}?w=164&h=164&fit=crop&auto=format`}
+                  src={`${item.img}`}
                   alt={item.title}
                   loading="lazy"
                 />
@@ -167,7 +153,7 @@ export default function GashPage() {
         </Box>
 
         <Lottery />
-        
+
       </Container>
       <Footer
         title="Footer"

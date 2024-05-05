@@ -4,11 +4,14 @@ import { Button, CardActionArea, CardActions } from '@mui/material';
 import { useState, useEffect } from 'react';
 import StarIcon from '@mui/icons-material/Star';
 import { Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
+import { useWeb3 } from '../Web3Context';
 
 
-export default function SellCard({ image, title, petclass, attribute, description, price, prebid, states, deadline, alt }) {
+export default function SellCard({ image, title, petclass, attribute, description, price, prebid, states, deadline, alt, tokenId, petAuction, web3 }) {
 
     // 定义各种状态变量
+    //const { petAuction, web3, account } = useWeb3();
+    const { account } = useWeb3();
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
     const [open, setOpen] = useState(false);
     const [bidOpen, setBidOpen] = useState(false);
@@ -66,20 +69,31 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
     const bidClose = () => {
         setBidOpen(false);
     };
-    
-    const bidSubmit = () => {
-        const bidValue = parseFloat(bidAmount);
-        const currentPrice = parseFloat(price);
-    
-        if (bidValue <= currentPrice) {
-            setBidError('Your bid must be higher than the current bid price.');
+
+    const bidSubmit = async () => {
+        const bidValueEth = parseFloat(bidAmount);
+        if (bidValueEth <= parseFloat(price)) {
+            setBidError('您的出价必须高于当前出价。');
             return;
         }
-    
-        console.log("Bid submitted:", bidAmount); // 这里添加实际提交出价到服务器的逻辑
-        setBidOpen(false);
-        setBidError(''); // 清除错误信息
+        const bidValueWei = web3.utils.toWei(bidAmount, 'ether'); // 将出价金额从以太转换为Wei
+
+        try {
+            if (petAuction && account) {
+                await petAuction.methods.bid(tokenId).send({ from: account, value: bidValueWei });
+                console.log("Bid successfully：", bidValueEth, "ETH");
+                bidClose();
+                setBidAmount('');
+                setBidError('');
+            } else {
+                setBidError('Contracts unloaded or wallet disconnected.'); // 合约未加载或钱包未连接
+            }
+        } catch (error) {
+            console.error("Bid failed：", error); // 提交出价错误
+            setBidError('提交出价失败，请确保出价高于当前最高出价，并且拍卖尚未结束。');
+        }
     };
+
 
 
     return (
@@ -170,9 +184,9 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                             Description: {description}
                         </Typography>
                         {/* <Typography variant="body1">Previous bids: {prebid} ETH</Typography> */}
-                        <Typography variant="h6">
+                        {/* <Typography variant="h6">
                             Status: {states === '1' ? 'On Sale' : 'Sold Out'}
-                        </Typography>
+                        </Typography> */}
                         <Typography variant="h6" style={{ marginTop: '20px' }}>
                             Previous Bids (from previous to latest):
                         </Typography>

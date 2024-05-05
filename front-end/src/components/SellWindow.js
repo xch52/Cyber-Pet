@@ -14,6 +14,8 @@ import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { useEffect, useState } from 'react';
+import { useWeb3 } from '../Web3Context'; 
 
 
 function Copyright(props) {
@@ -33,25 +35,41 @@ function Copyright(props) {
 
 const defaultTheme = createTheme();
 
-export default function SellWindows() {
+export default function SellWindows({ id }) {
 
+  const { petAuction, web3, account } = useWeb3()
   const [price, setPrice] = React.useState('');
   const [duration, setDuration] = React.useState('');
   const [description, setDescription] = React.useState('');
+  const [tokenId, setTokenId] = useState(id); // 假设 id 是传入的 NFT tokenId
+
   const [isCheckboxChecked, setIsCheckboxChecked] = React.useState(false);
   const [saleType, setSaleType] = React.useState('auction');
 
   const isFormFilled = price && duration && description && isCheckboxChecked;
 
-  const clickSubmit = (event) => {
+  const clickSubmit = async (event) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      price: data.get('price'),
-      description: data.get('description'),
-      saleType: saleType,
-    });
-  };
+    if (!petAuction || !account) {
+        alert('Please connect your wallet first.');
+        return;
+    }
+    
+    const priceWei = web3.utils.toWei(price, 'ether');
+    const durationSeconds  = parseInt(duration) * 60; // 如果持续时间是以分钟为单位，转换为秒
+    try {
+      if (saleType === 'auction') {
+        await petAuction.methods.createAuction(tokenId, priceWei, durationSeconds).send({ from: account });
+        alert('Auction created successfully!');
+      } else {
+        // Handle normal sale here
+        console.log('Normal sale not yet implemented');
+      }
+    } catch (error) {
+      console.error('Error creating transaction:', error);
+      alert('Failed to create transaction.');
+    }
+};
 
   const saleTypeChange = (event, newSaleType) => {
     if (newSaleType !== null) {
@@ -150,7 +168,8 @@ export default function SellWindows() {
 
             {/* 承诺勾选框 */}
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" checked={isCheckboxChecked} onChange={(e) => setIsCheckboxChecked(e.target.checked)} />}
+              control={<Checkbox value="remember" color="primary" checked={isCheckboxChecked} 
+              onChange={(e) => setIsCheckboxChecked(e.target.checked)} />}
               label="I've known the rules in the market."
             />
 

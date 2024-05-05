@@ -7,14 +7,13 @@ import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
-import StarIcon from '@mui/icons-material/StarBorder';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { makeStyles } from '@mui/styles';
 import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
 import { green  } from '@mui/material/colors';
+import { useEffect, useState, useContext } from 'react';
+import { useWeb3 } from '../Web3Context';
 
 
 function Copyright() {
@@ -100,8 +99,11 @@ const tiers_2 = [
 
 
 export default function Lottery() {
-    const classes = useStyles();
+
     const allTiers = [...tiers_1, ...tiers_2];
+    const classes = useStyles();
+    const { petLottery, web3 } = useWeb3();  // 使用 useContext 获取智能合约实例
+
 
     return (
         <React.Fragment>

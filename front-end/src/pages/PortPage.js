@@ -2,20 +2,14 @@ import * as React from 'react';
 import CssBaseline from '@mui/material/CssBaseline';
 import Grid from '@mui/material/Grid';
 import Container from '@mui/material/Container';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import FacebookIcon from '@mui/icons-material/Facebook';
-import XIcon from '@mui/icons-material/X';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Header from '../components/Header';
-import MainFeaturedPost from '../components/MainFeaturedPost';
-import FeaturedPost from '../components/FeaturedPost';
-import Main from '../components/Main';
-import Sidebar from '../components/Sidebar';
 import Footer from '../components/Footer';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomeExample1 from '../assets/HomeExample1.jpg'
-import HomeExample2 from '../assets/HomeExample2.jpg'
 import ShowCard from '../components/ShowCard';
+import { useEffect, useState } from 'react';
+import { useWeb3 } from '../Web3Context'; 
 
 
 const sections = [
@@ -51,6 +45,7 @@ export default function PortPage() {
           {products.map(product => (
             <Grid item xs={12} sm={6} md={3} key={product.id}>
               <ShowCard
+                id={product.id}
                 image={product.image}
                 title={product.title}
                 description={product.description}

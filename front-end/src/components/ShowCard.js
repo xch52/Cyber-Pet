@@ -12,7 +12,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import SellWindow from '../components/SellWindow';
 
-export default function ShowCard({ image, title, description, price, alt }) {
+export default function ShowCard({ id, image, title, description, price, alt }) {
   const [openFeed, setOpenFeed] = useState(false);
   const [openSell, setOpenSell] = useState(false);
 
@@ -63,7 +63,10 @@ export default function ShowCard({ image, title, description, price, alt }) {
         <Dialog open={openSell} onClose={clickCloseSell} fullWidth>
 
           {/* SellWindow组件被用作对话框内容 */}
-          <SellWindow />
+          <SellWindow 
+            id={id}
+          />
+
         </Dialog>
       </CardActions>
     </Card>
