@@ -8,7 +8,7 @@ import "./PetNFT.sol";
 contract PetLottery is VRFConsumerBase, Ownable {
     bytes32 internal keyHash; // Identifier for the Chainlink VRF node.
     uint256 internal fee; // Fee in LINK tokens required to request randomness.
-    uint256 public lotteryFee = 0.00000001 ether; // Fee in ether required to enter the lottery, adjustable as needed.
+    uint256 public lotteryFee = 10 wei; // Fee in ether required to enter the lottery, adjustable as needed.
 
     PetNFT public petNFTContract; // Reference to the PetNFT contract.
     mapping(bytes32 => address) private requestToSender; // Maps request ID to the lottery participant's address.
@@ -35,7 +35,7 @@ contract PetLottery is VRFConsumerBase, Ownable {
 
     // Public function to enter the lottery, requires payment in ETH.
     function getRandomNumber(uint256 amount) public payable returns (bytes32 requestId) {
-        require(msg.value >= lotteryFee * amount, "Not enough ether sent");
+        require(msg.value == lotteryFee * amount, "Not enough ether sent");
         require(LINK.balanceOf(address(this)) >= fee, "Not enough LINK - fill contract with LINK");
         requestId = requestRandomness(keyHash, fee);
         requestToSender[requestId] = msg.sender;
@@ -63,7 +63,7 @@ contract PetLottery is VRFConsumerBase, Ownable {
                 level = 3;
                 hasHighLevelPet = true;
             }
-
+            require(petNFTContract.getPetsByLevel(level).length > 0, "Not enough pets");
             uint256 petIndex = uint256(keccak256(abi.encode(randomness, i + 1000))) % petNFTContract.getPetsByLevel(level).length;
             uint256 tokenId = petNFTContract.removePetFromLevel(level, petIndex);
             tokenIds[i] = tokenId;
@@ -91,6 +91,10 @@ contract PetLottery is VRFConsumerBase, Ownable {
             tokenIds[swapIndex] = highLevelTokenId; // Update the tokenIds array with the high-level pet
         }
         emit LotteryFulfilled(player, tokenIds); // Emit an event once the lottery is successfully fulfilled
+    }
+
+    function getLinkBalance() public view returns (uint256) {
+        return LINK.balanceOf(address(this));
     }
 
     // Contract functions to enable receiving and managing Ether
