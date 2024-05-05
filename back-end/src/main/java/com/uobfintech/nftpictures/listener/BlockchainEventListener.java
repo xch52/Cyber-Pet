@@ -2,6 +2,7 @@ package com.uobfintech.nftpictures.listener;
 
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.uobfintech.nftpictures.service.ContractService;
@@ -16,8 +17,9 @@ public class BlockchainEventListener {
     }
 
     @EventListener(ContextRefreshedEvent.class)
+    @Async
     public void startListening() {
-        contractService.listenToMyEvent();
+        contractService.init();
     }
 }
 
