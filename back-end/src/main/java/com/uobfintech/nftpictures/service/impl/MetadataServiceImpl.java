@@ -2,26 +2,16 @@ package com.uobfintech.nftpictures.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.uobfintech.nftpictures.entity.History;
 import com.uobfintech.nftpictures.entity.Pet;
 import com.uobfintech.nftpictures.repository.MongoDAO;
 import com.uobfintech.nftpictures.service.MetadataService;
@@ -36,45 +26,54 @@ public class MetadataServiceImpl implements MetadataService {
     private MongoDAO mongoDAO;
 
     public Pet doc2Pet (Document doc) {
-        Long id = doc.getLong("id");
-        String name = doc.getString("name");
-        String imageUrl = doc.getString("url");
+        Integer id = doc.getInteger("id");
+        String title = doc.getString("title");
+        String imageUrl = doc.getString("image");
 
         Document attributesDoc = (Document) doc.get("attributes");
-        Map<String, String> attributes = new HashMap<>();
-        for (Map.Entry<String, Object> entry : attributesDoc.entrySet()) {
-            attributes.put(entry.getKey(), entry.getValue().toString());
+
+
+        List<String> attributes = new ArrayList<>();
+        if (doc.containsKey("attribute")) {
+            // 确保字段确实是一个列表
+            attributes = doc.getList("attribute", String.class);
+        } else {
+            System.out.println("No interests found or wrong data type.");
         }
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        Double price = doc.getDouble("price");
+        String states = doc.getString("states");
 
-        List<Document> historyDocs = (List<Document>) doc.get("history");
-
-        List<History> historyList = new ArrayList<>();
-        for (Document historyDoc : historyDocs) {
-            Integer transactionId = historyDoc.getInteger("transactionId");
-            BigDecimal price = BigDecimal.valueOf(historyDoc.getDouble("price"));
-
-            String dateStr = historyDoc.getString("date");
-            try {
-                LocalDate date = LocalDate.parse(dateStr, formatter);
-                System.out.println(date);
-                historyList.add(new History(transactionId, date, price));
-            } catch (DateTimeParseException e) {
-                System.err.println("Failed to parse the date: " + e.getMessage());
-            }
-        }
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//
+//        List<Document> historyDocs = (List<Document>) doc.get("history");
+//
+//        List<History> historyList = new ArrayList<>();
+//        for (Document historyDoc : historyDocs) {
+//            Integer transactionId = historyDoc.getInteger("transactionId");
+//            BigDecimal price = BigDecimal.valueOf(historyDoc.getDouble("price"));
+//
+//            String dateStr = historyDoc.getString("date");
+//            try {
+//                LocalDate date = LocalDate.parse(dateStr, formatter);
+//                System.out.println(date);
+//                historyList.add(new History(transactionId, date, price));
+//            } catch (DateTimeParseException e) {
+//                System.err.println("Failed to parse the date: " + e.getMessage());
+//            }
+//        }
         return Pet.builder()
                 .id(id)
-                .name(name)
+                .title(title)
                 .imageUrl(imageUrl)
                 .attributes(attributes)
-                .history(historyList)
+                .price(price)
+                .states(states)
                 .build();
     }
 
     public Pet findPetById(Long id) {
-        MongoCollection<Document> collection = mongoDAO.getCollection("user");
+        MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         // 使用id作为查询参数
         Document doc = collection.find(Filters.eq("id", id)).first();
         log.debug(doc.toJson());

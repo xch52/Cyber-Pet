@@ -21,12 +21,13 @@ public class MetadataController {
     @Autowired
     private MetadataService metadataService;
 
-    @GetMapping()
+    @GetMapping("")
     public Result getPets(@RequestParam(required = false) String filter,
                           @RequestParam(required = false) String sort,
                           @RequestParam(required = false) Integer limit) {
+        System.out.println("get Pets....");
         List<Pet> pets = metadataService.findAllPets();
-
+        System.out.println(pets);
         if (filter != null){
 
         }

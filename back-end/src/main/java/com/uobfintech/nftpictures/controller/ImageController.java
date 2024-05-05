@@ -1,5 +1,7 @@
 package com.uobfintech.nftpictures.controller;
 
+import io.ipfs.api.IPFS;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +22,14 @@ public class ImageController {
         this.ipfsService = ipfsService;
     }
 
-    @GetMapping(value = "/{hash}", produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/{hash}", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> getImageFromIpfs(@PathVariable String hash) {
         try {
-            byte[] image = ipfsService.getFileFromIpfs(hash);
+            IPFS ipfs = new IPFS("https://ipfs.io/ipfs/"+hash);
+            byte[] image = ipfsService.getFileFromIpfs(hash, ipfs);
             return new ResponseEntity<>(image, HttpStatus.OK);
         } catch (Exception e) {
+            System.out.println("exception.....");
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -17,16 +16,20 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class Pet {
     @Id
-    private Long id;
+    private Integer id;
 
-    private String name;
+    private String title;
 
     private String imageUrl;
 
-    private Map<String, String> attributes;
+    private List<String> attributes;
 
     // private String description;
 
     private List<History> history;
+
+    private Double price;
+
+    private String states;
 
 }

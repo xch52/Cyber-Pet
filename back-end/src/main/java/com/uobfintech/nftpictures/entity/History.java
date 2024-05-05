@@ -14,7 +14,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class History {
-    private Integer transactionId;
+    private String buyerId;
+
+    private String sellerId;
 
     private LocalDate date;
 

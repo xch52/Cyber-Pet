@@ -10,6 +10,12 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoException;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
+
 
 @Component
 public class MongoDAO {
@@ -18,7 +24,15 @@ public class MongoDAO {
 
     public MongoDAO(@Value("${spring.data.mongodb.uri}") String connectionString,
                     @Value("${spring.data.mongodb.database}") String databaseName) {
-        mongoClient = MongoClients.create(connectionString);
+        // mongoClient = MongoClients.create(connectionString);
+        ServerApi serverApi = ServerApi.builder()
+                .version(ServerApiVersion.V1)
+                .build();
+        MongoClientSettings settings = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(connectionString))
+                .serverApi(serverApi)
+                .build();
+        mongoClient = MongoClients.create(settings);
         database = mongoClient.getDatabase(databaseName);
     }
 
@@ -30,5 +44,8 @@ public class MongoDAO {
     public void close() {
         mongoClient.close();
     }
+
+
+
 }
 

@@ -55,6 +55,10 @@
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>com.github.ipfs</groupId>
 			<artifactId>java-ipfs-http-client</artifactId>
 			<version>1.4.4</version>

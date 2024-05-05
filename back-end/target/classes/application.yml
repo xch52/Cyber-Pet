@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9000
 
 spring:
   profiles:
@@ -7,9 +7,8 @@ spring:
   main:
     allow-circular-references: true
     allow-bean-definition-overriding: true
-    web-application-type: none
   data:
     mongodb:
-      uri: mongodb://localhost:27017
+      uri: mongodb+srv://xch52:zfJV0eAOAf8eg3nk@cluster0.nqdvk3f.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       database: mydatabase
 
