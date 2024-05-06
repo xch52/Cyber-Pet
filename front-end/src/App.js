@@ -5,6 +5,7 @@ import AuctionMarket from "./pages/AuctionMarket";
 import FreeMarket from "./pages/FreeMarket";
 import GashPage from "./pages/GashPage";
 import PortPage from "./pages/PortPage";
+import History from "./pages/History";
 import { useEffect } from 'react';
 import { Web3Provider  } from './Web3Context';
 
@@ -23,6 +24,7 @@ export default function App() {
           <Route path="/AuctionMarket" element={<AuctionMarket />} />
           <Route path="/FreeMarket" element={<FreeMarket />} />
           <Route path="/Gashapon" element={<GashPage />} />
+          <Route path="/History" element={<History />} />
           <Route path="/Portfolio" element={<PortPage />} />
         </Routes>
       </Router>

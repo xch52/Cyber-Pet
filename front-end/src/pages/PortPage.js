@@ -11,12 +11,15 @@ import ShowCard from '../components/ShowCard';
 import { useEffect, useState } from 'react';
 import { useWeb3 } from '../Web3Context'; 
 
+// 44.202.121.86
+//
 
 const sections = [
   { title: 'Home', url: '/' },
   { title: 'AuctionMarket', url: '/AuctionMarket' },
   { title: 'FreeMarket', url: '/FreeMarket' },
   { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'History', url: '/History' },
   { title: 'Portfolio', url: '/Portfolio' },
   //{ title: 'About us', url: '#' }
 ];
@@ -27,8 +30,11 @@ const products = [
     id: 1,
     image: HomeExample1,
     title: "Adventure Cat",
+    attributes: ['happy', 'sad'],
     description: "This is a professional cat who loves adventure.",
+    history:[],
     price: 3.5,
+    states: '1',
     alt: "Product 1",
   }
   // 可以根据需要添加更多商品
