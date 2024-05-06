@@ -2,33 +2,13 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "_vrfCoordinator",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_linkToken",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "_keyHash",
-				"type": "bytes32"
-			},
-			{
 				"internalType": "uint256",
-				"name": "_fee",
+				"name": "subscriptionId",
 				"type": "uint256"
 			},
 			{
 				"internalType": "address",
-				"name": "_petNFTContractAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "initialOwner",
+				"name": "petNFTContractAddress",
 				"type": "address"
 			}
 		],
@@ -39,23 +19,56 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "owner",
+				"name": "have",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "want",
 				"type": "address"
 			}
 		],
-		"name": "OwnableInvalidOwner",
+		"name": "OnlyCoordinatorCanFulfill",
 		"type": "error"
 	},
 	{
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "account",
+				"name": "have",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "coordinator",
 				"type": "address"
 			}
 		],
-		"name": "OwnableUnauthorizedAccount",
+		"name": "OnlyOwnerOrCoordinator",
 		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "ZeroAddress",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "vrfCoordinator",
+				"type": "address"
+			}
+		],
+		"name": "CoordinatorSet",
+		"type": "event"
 	},
 	{
 		"anonymous": false,
@@ -96,6 +109,12 @@
 				"internalType": "uint256[]",
 				"name": "tokenIds",
 				"type": "uint256[]"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "timestamp",
+				"type": "uint256"
 			}
 		],
 		"name": "LotteryFulfilled",
@@ -111,10 +130,10 @@
 				"type": "address"
 			},
 			{
-				"indexed": true,
-				"internalType": "bytes32",
+				"indexed": false,
+				"internalType": "uint256",
 				"name": "requestId",
-				"type": "bytes32"
+				"type": "uint256"
 			},
 			{
 				"indexed": false,
@@ -130,15 +149,65 @@
 		"anonymous": false,
 		"inputs": [
 			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "bytes",
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"name": "NFTReceived",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "previousOwner",
+				"name": "from",
 				"type": "address"
 			},
 			{
 				"indexed": true,
 				"internalType": "address",
-				"name": "newOwner",
+				"name": "to",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferRequested",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "to",
 				"type": "address"
 			}
 		],
@@ -150,22 +219,10 @@
 		"type": "fallback"
 	},
 	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "amount",
-				"type": "uint256"
-			}
-		],
-		"name": "getRandomNumber",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "requestId",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "payable",
+		"inputs": [],
+		"name": "acceptOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -179,6 +236,40 @@
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "operator",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "from",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bytes",
+				"name": "data",
+				"type": "bytes"
+			}
+		],
+		"name": "onERC721Received",
+		"outputs": [
+			{
+				"internalType": "bytes4",
+				"name": "",
+				"type": "bytes4"
+			}
+		],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -210,24 +301,62 @@
 	{
 		"inputs": [
 			{
-				"internalType": "bytes32",
+				"internalType": "uint256",
 				"name": "requestId",
-				"type": "bytes32"
+				"type": "uint256"
 			},
 			{
-				"internalType": "uint256",
-				"name": "randomness",
-				"type": "uint256"
+				"internalType": "uint256[]",
+				"name": "randomWords",
+				"type": "uint256[]"
 			}
 		],
-		"name": "rawFulfillRandomness",
+		"name": "rawFulfillRandomWords",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "amount",
+				"type": "uint256"
+			}
+		],
+		"name": "requestRandomWords",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "requestId",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
-		"name": "renounceOwnership",
+		"name": "s_vrfCoordinator",
+		"outputs": [
+			{
+				"internalType": "contract IVRFCoordinatorV2Plus",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_vrfCoordinator",
+				"type": "address"
+			}
+		],
+		"name": "setCoordinator",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -236,7 +365,7 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "newOwner",
+				"name": "to",
 				"type": "address"
 			}
 		],
