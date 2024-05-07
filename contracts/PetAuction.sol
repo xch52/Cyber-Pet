@@ -122,9 +122,10 @@ contract PetAuction is ReentrancyGuard {
 
     // Function to automatically check and end all the time expiring auctions.
     function checkAndEndAuctions() external {
-        uint256 length = activeAuctions.length();
-        for (uint256 i = 0; i < length; i++) {
-            uint256 tokenId = activeAuctions.at(i);
+        int i = int(activeAuctions.length());
+        while ( i > 0) {
+            --i;
+            uint256 tokenId = activeAuctions.at(uint256(i));
             Auction storage auction = auctions[tokenId];
             if (block.timestamp > auction.endTime && auction.active) {
                 endAuction(tokenId);
