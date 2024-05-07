@@ -65,39 +65,63 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
     const bidClick = () => {
         setBidOpen(true);
     };
-    
+
     const bidClose = () => {
         setBidOpen(false);
     };
 
-    const bidSubmit = async () => {
-        const bidValueEth = parseFloat(bidAmount);
-        if (bidValueEth <= parseFloat(price)) {
-            setBidError('您的出价必须高于当前出价。');
-            return;
-        }
-        const bidValueWei = web3.utils.toWei(bidAmount, 'ether'); // 将出价金额从以太转换为Wei
+    
+// SellCard组件中的出价提交函数
+const bidSubmit = async () => {
+    const bidValueEth = parseFloat(bidAmount); // 从输入框获取用户输入的ETH数
+    if (isNaN(bidValueEth) || bidValueEth <= 0) {
+        setBidError('请输入有效的出价。');
+        return;
+    }
 
-        try {
-            if (petAuction && account) {
-                await petAuction.methods.bid(tokenId).send({ from: account, value: bidValueWei });
-                console.log("Bid successfully：", bidValueEth, "ETH");
-                bidClose();
-                setBidAmount('');
-                setBidError('');
-            } else {
-                setBidError('Contracts unloaded or wallet disconnected.'); // 合约未加载或钱包未连接
-            }
-        } catch (error) {
-            console.error("Bid failed：", error); // 提交出价错误
-            setBidError('提交出价失败，请确保出价高于当前最高出价，并且拍卖尚未结束。');
-        }
-    };
+    if (bidValueEth <= parseFloat(price)) {
+        setBidError('您的出价必须高于当前出价。');
+        return;
+    }
 
+    const bidValueWei = web3.utils.toWei(bidAmount, 'ether').toString("hex"); // 将ETH转换为Wei
+
+    try {
+        if (petAuction && account) {
+            // 调用智能合约的bid方法，发送交易
+            await petAuction.methods.bid(tokenId).send({ from: account, value: bidValueWei });
+            console.log("Bid successfully：", bidValueEth, "ETH");
+            bidClose(); // 关闭出价对话框
+            setBidAmount(''); // 清空输入框
+            setBidError(''); // 清除错误信息
+        } else {
+            setBidError('合约未加载或钱包未连接。'); // 合约未加载或钱包未连接
+        }
+    } catch (error) {
+        console.error("Bid failed：", error);
+        setBidError('提交出价失败，请确保出价高于当前最高出价，并且拍卖尚未结束。');
+    }
+};
+
+
+    function formatPrice(priceInEth) {
+        if (!priceInEth || isNaN(parseFloat(priceInEth))) {
+            return '0'; // 或者根据你的需求返回 'Unavailable' 或其他
+        }
+    
+        const formattedPrice = parseFloat(priceInEth);
+        // 如果价格小于0.00001，使用科学计数法表示
+        if (formattedPrice < 0.00001) {
+            return formattedPrice.toExponential(2);
+        }
+    
+        // 大于或等于0.00001时，直接显示，删除末尾不必要的0
+        return formattedPrice.toString().replace(/\.?0+$/, '');
+    }
 
 
     return (
-        <Card sx={{ maxWidth: 300 }}>
+        <Card sx={{ maxWidth: 300, height: 470 }}>
             <CardActionArea onClick={InfoClickOpen}>
                 <CardMedia
                     component="img"
@@ -113,7 +137,8 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         <Typography variant="h6" color="text.secondary" component="div">
                             {showStars(petclass)}
                         </Typography>
-                        {timeLeft.timeOut ? ( // 检查是否超时
+
+                        {/* {timeLeft.timeOut ? ( // 检查是否超时
                             <Typography variant="subtitle2" color="error" style={{ marginLeft: '0.5rem' }}>
                                 Time Out
                             </Typography>
@@ -121,16 +146,21 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                             <Typography variant="subtitle2" color="green" style={{ marginLeft: '0.5rem' }}>
                                 {`  ${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}
                             </Typography>
-                        )}
+                        )} */}
+
+                        <Typography variant="h7" color="text.secondary">
+                            End: {deadline} {/* 直接显示传入的时间字符串 */}
+                        </Typography>
+
                     </div>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" style={{ height: 40, overflow: 'hidden' }}> {/* 限制描述高度并隐藏溢出内容 */}
                         {description}
                     </Typography>
                 </CardContent>
             </CardActionArea>
             <CardActions>
                 <Typography variant="h6" color="text.secondary" sx={{ flexGrow: 1, color: 'rgba(255, 0, 0, 0.6)' }}>
-                    {price}
+                    {formatPrice(price)}
                 </Typography>
 
                 <Button
@@ -195,6 +225,7 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         ))}
                     </DialogContentText>
                 </DialogContent>
+
                 <DialogActions>
                     <Button onClick={InfoClose} color="primary" autoFocus>
                         Close

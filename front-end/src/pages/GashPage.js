@@ -147,7 +147,8 @@ const footers = [
   },
 ];
 
-
+// 获取全部： http://44.202.121.86:9000/api/pets/all
+// 获取by ID： http://44.202.121.86:9000/api/pets/id
 
 export default function GashPage() {
 
@@ -185,7 +186,7 @@ export default function GashPage() {
     fetchProducts();
   }, []);
 
-  
+
   return (
     <ThemeProvider theme={defaultTheme}>
       <CssBaseline />

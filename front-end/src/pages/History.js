@@ -131,30 +131,33 @@ export default function History() {
     return 0; // 选择 'none' 时保持默认顺序
   });
 
+
+// 获取全部： http://44.202.121.86:9000/api/pets/all
+// 获取by ID： http://44.202.121.86:9000/api/pets/id
+
   // 获取正在拍卖的宠物信息
   useEffect(() => {
 
     const fetchSoldProducts = async () => {
       setProducts([]);
       try {
-        const response = await fetch('http://44.202.121.86:9000/api/pets/1');
+        const response = await fetch('http://44.202.121.86:9000/api/pets/all');
         const json = await response.json();
         if (json.code === 1 && json.msg === "success") {
-          const productData = json.data;
-          const soldProduct = {
+          const soldProduct = json.data.map(productData => ({
             id: productData.id,
             image: productData.imageUrl,
             title: productData.title,
-            petclass: "1",
+            petclass: productData.petclass,
             attribute: productData.attributes,
-            description: "This is a professional cat who loves adventure.",
+            description: productData.description,
             prebid: productData.history || [],
             price: productData.price,
             states: productData.states,
             alt: "Product " + productData.id
-          };
+           }));
 
-          setProducts([soldProduct]);  
+          setProducts(soldProduct);  
         } else {
           console.error('Server response not successful:', json.msg);
         }

@@ -90,7 +90,6 @@ export default function AuctionMarket() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
   const [products, setProducts] = useState([]);
-  const [soldProducts, setSoldProducts] = useState([]);
   const [viewState, setViewState] = useState('onSale');
 
 
@@ -131,36 +130,59 @@ export default function AuctionMarket() {
     return 0; // 选择 'none' 时保持默认顺序
   });
 
+
   // 获取正在拍卖的宠物信息
   useEffect(() => {
     
     const fetchAuctions = async () => {
-      if (petAuction && web3 && petNFT) {
-        setIsLoading(true);
+      if (!petAuction || !web3 || !petNFT) {
+        console.log("Waiting for initialization...");
+        return;
+      }
         try {
-          // 调用智能合约的 listActiveAuctionsBrief 函数
-          const [tokenIds, auctionsBrief, petsBrief] = await petAuction.methods.listActiveAuctionsBrief().call();
-
+          console.log('Contract address:', petAuction.options.address);
+          console.log('Calling listActiveAuctionsInfo...');
+          const data = await petAuction.methods.listActiveAuctionsInfo().call();
+          console.log('Received raw data:', data);
+    
+          const tokenIds = data[0];
+          const auctionsBrief = data[1];
+          const petsBrief = data[2];
+    
+          console.log('Token IDs:', tokenIds);
+          console.log('Auction Details:', auctionsBrief);
+          console.log('Pet Details:', petsBrief);
+          
+          /* global BigInt */
+          //const [tokenIds, auctionsBrief, petsBrief] = data;
           const newProducts = tokenIds.map((tokenId, index) => ({
-            id: tokenId,
-            image: petsBrief[index].uri, // 需要处理获取NFT图片的逻辑
-            title: petsBrief[index].name, // 假设PetAttributes包含一个name属性
-            petclass: petsBrief[index].level.toString(), // 假设PetAttributes包含一个class属性
-            attribute: petsBrief[index].attributes, // 假设attributes是一个数组
-            description: petsBrief[index].description, // 假设PetAttributes包含一个description属性
-            price: web3.utils.fromWei(auctionsBrief[index].highestBid, 'ether'),
-            prebid: [], // 如果合约提供了相关数据，可以在这里添加
+            id: tokenId.toString(),
+            image: `https://ipfs.io/ipfs/${petsBrief[index].uri}`,
+            title: petsBrief[index].name,
+            petclass: petsBrief[index].level.toString(),
+            attribute: [petsBrief[index].appearance + ', ' + petsBrief[index].character] ,
+            description: petsBrief[index].description,
+            price: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'),
+            prebid: [],
             states: auctionsBrief[index].active ? "1" : "0",
-            deadline: new Date(auctionsBrief[index].endTime * 1000).toLocaleString(),
-            alt: 'NFT Image Alt Text' // 从NFT metadata获取或自定义
+            deadline: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(),
+            alt: "Product " + tokenId,
+
+            seller:auctionsBrief[index].seller,
+            startTime: new Date(Number(auctionsBrief[index].startTime) * 1000).toLocaleString(), // Auction start time in UNIX timestamp.
+            endTime: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(), // Auction end time in UNIX timestamp.
+            highestBid: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'), // Current highest bid amount.
+            highestBidder: auctionsBrief[index].highestBidder, // Address of the current highest bidder.
+            reservePrice: web3.utils.fromWei(auctionsBrief[index].reservePrice.toString(), 'ether'),
+            active: auctionsBrief[index].active.toString(),
           }));
           setProducts(newProducts);
         } catch (error) {
-          console.error('Error fetching auctions:', error);
+          console.error('Error fetching auctions:', error.message, error.stack);
         }
-      }
+      
     };
-
+    console.log(petAuction)
     fetchAuctions();
 
   }, [petAuction, petNFT, web3]);
@@ -273,7 +295,8 @@ export default function AuctionMarket() {
                       petclass={product.petclass}
                       attribute={product.attribute}
                       description={product.description}
-                      price={`${product.price} ETH`}
+                      //price={`${product.reservePrice} ETH`}
+                      price={`${Math.max(product.highestBid, product.reservePrice)} ETH`}
                       prebid={product.prebid}
                       states={product.states}
                       deadline={product.deadline}
