@@ -33,6 +33,7 @@ import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.Log;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.gas.DefaultGasProvider;
@@ -40,6 +41,8 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import java.time.ZoneId;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
 import com.uobfintech.nftpictures.abi.PetAuction_abi;
 import com.uobfintech.nftpictures.abi.PetLottery_abi;
 import com.uobfintech.nftpictures.abi.PetMarket_abi;
@@ -120,31 +123,64 @@ public class ContractServiceImpl implements ContractService {
         return instant.atZone(ZoneId.of("UTC+1"));
     }
 
+    public BigInteger convertBackToTimestamp(ZonedDateTime zonedDateTime) {
+        // 从ZonedDateTime获取Instant对象
+        Instant instant = zonedDateTime.toInstant();
+
+        // 将Instant的毫秒数转换为秒数
+        long seconds = instant.getEpochSecond();
+
+        // 将秒数转换为BigInteger
+        return BigInteger.valueOf(seconds);
+    }
+
+
     @Async
     @Scheduled(fixedRate = 600000) // 每600000毫秒（即十分钟）执行一次
     public void callContractFunctionPeriodically() {
         try {
             Credentials credentials = Credentials.create("b67d61efaab1a9d65a53221c8cfbd89d38c72d6ff0ed40b8e4e4a56af607cb0b");
+//            BigInteger GAS_LIMIT = BigInteger.valueOf(9000000L);
+//            BigInteger GAS_PRICE = BigInteger.valueOf(2100000000L);
             PetAuction_abi petAuctionAbi = new PetAuction_abi(contractAddressAuction, web3j, credentials, new DefaultGasProvider());
             RemoteFunctionCall<TransactionReceipt> remoteFunctionCall
                     = petAuctionAbi.checkAndEndAuctions();
-//            TransactionReceipt result = remoteFunctionCall.send();
-//            System.out.println("Contract returned: " + result);
+            // TransactionReceipt result = remoteFunctionCall.send();
 
-            String encodedFunction = remoteFunctionCall.encodeFunctionCall();
-            Transaction transaction = Transaction.createEthCallTransaction(null, contractAddressAuction, encodedFunction);
-            EthCall response = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).send();
+            try {
+                TransactionReceipt result = remoteFunctionCall.send();
+                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
 
-            if (response.hasError()) {
-                System.out.println("Error: " + response.getError().getMessage());
+                System.out.println("Contract returned: " + result);
+                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
+
+
+                String transactionHash = result.getTransactionHash();
+                EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionHash).send();
+                if (receipt.getTransactionReceipt().isPresent()) {
+                    System.out.println("Transaction " + transactionHash + " was included in block " + receipt.getTransactionReceipt().get().getBlockNumber());
+                } else {
+                    System.out.println("Transaction is still pending...");
+                }
+            } catch (Exception e) {
+                System.err.println("Transaction failed: " + e.getMessage());
+                e.printStackTrace();
             }
-            List<Type> result = remoteFunctionCall.decodeFunctionResponse(response.getValue());
 
-            if (!result.isEmpty()){
-                System.out.println(result.get(0).getValue().toString());
-            }else {
-                System.out.println("No result");
-            }
+//            String encodedFunction = remoteFunctionCall.encodeFunctionCall();
+//            Transaction transaction = Transaction.createEthCallTransaction(null, contractAddressAuction, encodedFunction);
+//            EthCall response = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).send();
+//
+//            if (response.hasError()) {
+//                System.out.println("Error: " + response.getError().getMessage());
+//            }
+//            List<Type> result = remoteFunctionCall.decodeFunctionResponse(response.getValue());
+//
+//            if (!result.isEmpty()){
+//                System.out.println(result.get(0).getValue().toString());
+//            }else {
+//                System.out.println("No result");
+//            }
 
 
 
@@ -226,6 +262,7 @@ public class ContractServiceImpl implements ContractService {
         subscribeToAuctionCreatedEvent();
         subscribeToBidPlacedEvent();
         subscribeToAuctionEndedEvent();
+        subscribeToAuctionAutoEndedEvent();
         // subscribeToPEvent();
         subscribeToPetMinted();
     }
@@ -285,6 +322,12 @@ public class ContractServiceImpl implements ContractService {
     public void subscribeToAuctionEndedEvent() {
         EthFilter filter = createFilter(AUCTIONENDED_EVENT, contractAddressAuction);
         web3j.ethLogFlowable(filter).subscribe(this::handleAuctionEndedEvent, this::handleError);
+    }
+
+    @Async
+    public void subscribeToAuctionAutoEndedEvent() {
+        EthFilter filter = createFilter(AUCTIONAUTOENDED_EVENT, contractAddressAuction);
+        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionAutoEnded, this::handleError);
     }
 
     @Async
@@ -366,9 +409,11 @@ public class ContractServiceImpl implements ContractService {
         AuctionCreatedEventResponse auctionCreatedEventResponse = getAuctionCreatedEventFromLog(log);
         Auction auction = getAuctionById(auctionCreatedEventResponse.tokenId);
         auction.setSeller(auctionCreatedEventResponse.seller);
+        auction.setTimestamp(auctionCreatedEventResponse.endTime);
 
         auction.setStartTime(convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.startTime));
         auction.setEndTime(convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.endTime));
+        auction.setReservePrice(auctionCreatedEventResponse.reservePrice);
         auctionList.add(auction);
         System.out.println(auction);
 //        System.out.println("token id:"+ auctionCreatedEventResponse.tokenId);
@@ -384,6 +429,13 @@ public class ContractServiceImpl implements ContractService {
         System.out.println("token id:"+ bidPlacedEventResponse.tokenId);
         System.out.println("bidder:"+ bidPlacedEventResponse.bidder);
         System.out.println("amount:"+ bidPlacedEventResponse.amount);
+        MongoCollection<Document> collection = mongoDAO.getCollection("pet");
+        // 向数组中添加一个元素，如果元素已存在，则不会重复添加
+        collection.updateOne(
+                Filters.eq("id", bidPlacedEventResponse.tokenId),
+                Updates.addToSet("prebid", bidPlacedEventResponse.amount)
+        );
+
     }
 
 
@@ -391,16 +443,55 @@ public class ContractServiceImpl implements ContractService {
         System.out.println("handling Auction Ended..........");
         PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse =  getAuctionEndedEventFromLog(log);
         for (Auction auction : auctionList) {
-            if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId)) {
+
+            if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId) &&
+                    Objects.equals(auction.getTimestamp(), auctionEndedEventResponse.CreatedEndTime)) {
                 auction.setHighestBidder(auctionEndedEventResponse.winner);
                 auction.setHighestBid(auctionEndedEventResponse.amount);
                 System.out.println(auction);
             }
         }
+        if (!Objects.equals(auctionEndedEventResponse.winner, "0x0000000000000000000000000000000000000000")){
+            MongoCollection<Document> collection = mongoDAO.getCollection("pet");
+            // 向数组中添加一个元素，如果元素已存在，则不会重复添加
+            collection.updateOne(
+                    Filters.eq("id", auctionEndedEventResponse.tokenId),
+                    Updates.set("owner", auctionEndedEventResponse.winner)
+            );
+            collection.updateOne(
+                    Filters.eq("id", auctionEndedEventResponse.tokenId),
+                    Updates.set("price", auctionEndedEventResponse.amount)
+            );
+        }
 
-//        System.out.println("token id: " + auctionEndedEventResponse.tokenId);
-//        System.out.println("winner: "+auctionEndedEventResponse.winner);
-//        System.out.println("amount: "+auctionEndedEventResponse.amount);
+    }
+
+    private void handleAuctionAutoEnded(Log log) {
+        System.out.println("handling Auction Auto Ended..........");
+        PetAuction_abi.AuctionAutoEndedEventResponse auctionAutoEndedEventResponse =  getAuctionAutoEndedEventFromLog(log);
+        System.out.println("tokenid"+auctionAutoEndedEventResponse.tokenId);
+        System.out.println("winner"+auctionAutoEndedEventResponse.winner);
+        System.out.println("amoumt"+auctionAutoEndedEventResponse.amount);
+//        for (Auction auction : auctionList) {
+//            if (Objects.equals(auction.getTokenId(), auctionAutoEndedEventResponse.tokenId) &&
+//                    Objects.equals(convertBackToTimestamp(auction.getEndTime()), auctionAutoEndedEventResponse.endTime)) {
+//                auction.setHighestBidder(auctionAutoEndedEventResponse.winner);
+//                auction.setHighestBid(auctionAutoEndedEventResponse.amount);
+//                System.out.println(auction);
+//            }
+//        }
+//        if (!Objects.equals(auctionAutoEndedEventResponse.winner, "0x0000000000000000000000000000000000000000")){
+//            MongoCollection<Document> collection = mongoDAO.getCollection("pet");
+//            // 向数组中添加一个元素，如果元素已存在，则不会重复添加
+//            collection.updateOne(
+//                    Filters.eq("id", auctionAutoEndedEventResponse.tokenId),
+//                    Updates.set("owner", auctionAutoEndedEventResponse.winner)
+//            );
+//            collection.updateOne(
+//                    Filters.eq("id", auctionAutoEndedEventResponse.tokenId),
+//                    Updates.set("price", auctionAutoEndedEventResponse.amount)
+//            );
+//        }
     }
 
 //    private void handlePEvent(Log log) {
@@ -431,18 +522,19 @@ public class ContractServiceImpl implements ContractService {
 
 //        Double [] notBidded = new Double[1];
 //        notBidded[0] = (double) -1;
-        if (pet.getId() == 16) {
+        if (pet.getId() >= 16) {
             MongoCollection<Document> collection = mongoDAO.getCollection("pet");
             Document query = new Document("id", pet.getId());
             long count = collection.countDocuments(query);
             if (count == 0){
+                List<Double> prebid = new ArrayList<>();
                 Document doc = new Document("id", pet.getId())
                         .append("attributes", pet.getAttributes())
                         .append("image", mongoDAO.httpPrefix4Ipfs()+pet.getImageUrl())
                         .append("petclass", pet.getPetclass())
                         .append("title", pet.getTitle())
                         .append("description", pet.getDescription())
-                        .append("prebid", null)
+                        .append("prebid", prebid)
                         .append("price", null)
                         .append("states", null)
                         .append("owner", pet.getOwner());

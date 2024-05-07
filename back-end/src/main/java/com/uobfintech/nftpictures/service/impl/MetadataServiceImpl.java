@@ -31,7 +31,7 @@ public class MetadataServiceImpl implements MetadataService {
         String title = doc.getString("title");
         String imageUrl = doc.getString("image");
 
-        Document attributesDoc = (Document) doc.get("attributes");
+        // Document attributesDoc = (Document) doc.get("attributes");
 
 
         List<String> attributes = new ArrayList<>();
@@ -46,6 +46,10 @@ public class MetadataServiceImpl implements MetadataService {
         String states = doc.getString("states");
         String petclass = doc.getString("petclass");
         String description = doc.getString("description");
+        List<Double> prebid = doc.getList("prebid", Double.class);
+        String owner = doc.getString("owner");
+
+
 
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 //
@@ -69,11 +73,13 @@ public class MetadataServiceImpl implements MetadataService {
                 .id(id)
                 .title(title)
                 .imageUrl(imageUrl)
+                .prebid(prebid)
                 .attributes(attributes)
                 .price(price)
                 .states(states)
                 .petclass(petclass)
                 .description(description)
+                .owner(owner)
                 .build();
     }
 

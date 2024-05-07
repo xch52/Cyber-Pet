@@ -16,6 +16,7 @@ import java.time.ZonedDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Auction {
+
     public BigInteger tokenId;
 
     public String seller;
@@ -23,6 +24,8 @@ public class Auction {
     public ZonedDateTime startTime;
 
     public ZonedDateTime endTime;
+
+    public BigInteger timestamp;
 
     public BigInteger highestBid;
 

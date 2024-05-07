@@ -95,7 +95,7 @@ public class PetAuction_abi extends Contract {
     ;
 
     public static final Event AUCTIONENDED_EVENT = new Event("AuctionEnded", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Uint256>(true) {}, new TypeReference<Address>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}, new TypeReference<Uint256>() {}));
     ;
 
     public static final Event AUCTIONUPDATED_EVENT = new Event("AuctionUpdated", 
@@ -107,7 +107,7 @@ public class PetAuction_abi extends Contract {
     ;
 
     @Deprecated
-    protected PetAuction_abi(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
+    public PetAuction_abi(String contractAddress, Web3j web3j, Credentials credentials, BigInteger gasPrice, BigInteger gasLimit) {
         super(BINARY, contractAddress, web3j, credentials, gasPrice, gasLimit);
     }
 
@@ -248,6 +248,8 @@ public class PetAuction_abi extends Contract {
         typedResponse.winner = (String) eventValues.getNonIndexedValues().get(0).getValue();
         typedResponse.amount = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
         typedResponse.endTime = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
+        typedResponse.CreatedStartTime = (BigInteger) eventValues.getNonIndexedValues().get(3).getValue();
+        typedResponse.CreatedEndTime = (BigInteger) eventValues.getNonIndexedValues().get(4).getValue();
         return typedResponse;
     }
 
@@ -663,6 +665,10 @@ public class PetAuction_abi extends Contract {
         public BigInteger amount;
 
         public BigInteger endTime;
+
+        public BigInteger CreatedStartTime;
+
+        public BigInteger CreatedEndTime;
     }
 
     public static class AuctionUpdatedEventResponse extends BaseEventResponse {

@@ -23,7 +23,7 @@ public class Web3jConfig {
 
     @Bean
     public String contractAddressAuction() {
-        return "0x3F352EE6705d9D79793A290256ce40601090C3df"; // 合约地址
+        return "0xa1e4d04A6da31a157532E426954D025d14Ebe171"; // 合约地址
     }
 
     @Bean

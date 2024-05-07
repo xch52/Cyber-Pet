@@ -28,6 +28,8 @@ public class Pet {
 
     private List<String> attributes;
 
+    private List<Double> prebid;
+
     private String description;
 
     private List<History> history;
