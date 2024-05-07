@@ -51,27 +51,26 @@ export default function SellWindows({ id }) {
   const clickSubmit = async (event) => {
     event.preventDefault();
     if (!petAuction || !account) {
-        alert('Please connect your wallet first.');
-
-
-        return;
+      alert('Please connect your wallet first.');
+      return;
     }
     
     const priceWei = web3.utils.toWei(price, 'ether');
-    const durationSeconds  = parseInt(duration) * 60; // 如果持续时间是以分钟为单位，转换为秒
+    const durationSeconds = parseInt(duration) * 60;
+
     try {
       if (saleType === 'auction') {
         await petAuction.methods.createAuction(tokenId, priceWei, durationSeconds).send({ from: account });
         alert('Auction created successfully!');
-      } else {
-        // Handle normal sale here
-        console.log('Normal sale not yet implemented');
+      } else if (saleType === 'normal') {
+        await petAuction.methods.listPetForSale(tokenId, priceWei).send({ from: account });
+        alert('Pet listed for sale successfully!');
       }
     } catch (error) {
       console.error('Error creating transaction:', error);
       alert('Failed to create transaction.');
     }
-};
+  };
 
   const saleTypeChange = (event, newSaleType) => {
     if (newSaleType !== null) {
