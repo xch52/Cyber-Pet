@@ -9,7 +9,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomeExample1 from '../assets/HomeExample1.jpg'
 import ShowCard from '../components/ShowCard';
 import { useEffect, useState } from 'react';
-import { useWeb3 } from '../Web3Context'; 
+import { useWeb3 } from '../Web3Context';
 
 // 44.202.121.86
 //
@@ -27,35 +27,69 @@ const defaultTheme = createTheme();
 
 const products = [
   {
-    id: 1,
-    image: HomeExample1,
-    title: "Adventure Cat",
-    attributes: ['happy', 'sad'],
-    description: "This is a professional cat who loves adventure.",
-    history:[],
-    price: 3.5,
-    states: '1',
-    alt: "Product 1",
+    // id: 1,
+    // image: HomeExample1,
+    // title: "Adventure Cat",
+    // petclass: "1",
+    // attributes: ['happy', 'sad'],
+    // description: "This is a professional cat who loves adventure.",
+    // history:[],
+    // price: 3.5,
+    // states: '1',
+    // alt: "Product 1",
   }
   // 可以根据需要添加更多商品
 ];
 
-export default function PortPage() {
-    return (
-      <ThemeProvider theme={defaultTheme}>
-        <CssBaseline />
-        <Container maxWidth="lg">
-          <Header title="CyberPet" sections={sections} />
 
-          <Grid container spacing={4} justifyContent="center">
+export default function PortPage() {
+
+  const { petNFT } = useWeb3(); // 获取PetNFT合约实例
+  const [products, setProducts] = useState([]); // 用于存储获取的宠物数据
+  const { account } = useWeb3();
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        if (petNFT && account) {
+          const pets = await petNFT.methods.getMyPets().call({from: account}); // 调用getPetAttributes获取宠物信息
+          setProducts(pets.map(pet => ({
+            id: pet.tokenId,
+            image: `https://ipfs.io/ipfs/${pet.uri}`,
+            title: pet.name,
+            petclass: pet.level.toString(),
+            attribute: [pet.appearance + ', ' + pet.character] ,
+            description: pet.description,
+            price: `Level ${pet.level}`,
+            alt: `Pet ${pet.name}`,
+            attributes: [pet.appearance, pet.character]
+          })));
+        }
+      } catch (error) {
+        console.error("Failed to fetch pets:", error);
+      }
+    };
+
+    fetchPets();
+  }, [petNFT, account]);
+
+
+  return (
+    <ThemeProvider theme={defaultTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg">
+        <Header title="CyberPet" sections={sections} />
+
+        <Grid container spacing={4} justifyContent="center">
           {products.map(product => (
             <Grid item xs={12} sm={6} md={3} key={product.id}>
               <ShowCard
                 id={product.id}
                 image={product.image}
                 title={product.title}
+                petclass={product.petclass}
+                attribute={product.attribute}
                 description={product.description}
-                price={`${product.price} ETH`}
                 alt={product.alt}
               />
             </Grid>
@@ -63,12 +97,12 @@ export default function PortPage() {
         </Grid>
 
 
-        </Container>
-        <Footer
-          title="Footer"
-          description="Hope you can enjony CyberPet!"
-        />
-      </ThemeProvider>
-    );
-  }
-  
+      </Container>
+      <Footer
+        title="Footer"
+        description="Hope you can enjony CyberPet!"
+      />
+    </ThemeProvider>
+  );
+}
+

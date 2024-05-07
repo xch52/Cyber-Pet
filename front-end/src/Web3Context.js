@@ -36,12 +36,12 @@ export const Web3Provider = ({ children }) => {
                 petNFT: new web3Instance.eth.Contract(PetNFTABI, process.env.REACT_APP_PETNFT_ADDRESS),
             };
 
-            console.log("Contract instances created:", {
-              PetMarket: contractInstances.petMarket.options.address,
-              PetAuction: contractInstances.petAuction.options.address,
-              PetLottery: contractInstances.petLottery.options.address,
-              PetNFT: contractInstances.petNFT.options.address,
-            });
+      console.log("Contract instances created:", {
+        PetMarket: contractInstances.petMarket.options.address,
+        PetAuction: contractInstances.petAuction.options.address,
+        PetLottery: contractInstances.petLottery.options.address,
+        PetNFT: contractInstances.petNFT.options.address,
+      });
 
             setContracts(contractInstances);
 

@@ -45,7 +45,7 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
         return timeLeft;
     }
 
-    // 宠物信息展示
+    // 点击图片展示宠物详细信息
     const InfoClickOpen = () => {
         setOpen(true);
     };
@@ -75,16 +75,18 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
 const bidSubmit = async () => {
     const bidValueEth = parseFloat(bidAmount); // 从输入框获取用户输入的ETH数
     if (isNaN(bidValueEth) || bidValueEth <= 0) {
-        setBidError('请输入有效的出价。');
+        setBidError('Please enter a valid bid.');
         return;
     }
 
     if (bidValueEth <= parseFloat(price)) {
-        setBidError('您的出价必须高于当前出价。');
+        setBidError('Your bid must be higher than the current bid.');
         return;
     }
 
-    const bidValueWei = web3.utils.toWei(bidAmount, 'ether').toString("hex"); // 将ETH转换为Wei
+    console.log("Bid origin price", bidAmount);
+
+    const bidValueWei = web3.utils.toWei(bidAmount, 'ether'); // 将ETH转换为Wei
 
     try {
         if (petAuction && account) {
@@ -95,11 +97,16 @@ const bidSubmit = async () => {
             setBidAmount(''); // 清空输入框
             setBidError(''); // 清除错误信息
         } else {
-            setBidError('合约未加载或钱包未连接。'); // 合约未加载或钱包未连接
+            setBidError('The contract is not loaded or the wallet is not connected.'); // 合约未加载或钱包未连接
         }
     } catch (error) {
         console.error("Bid failed：", error);
-        setBidError('提交出价失败，请确保出价高于当前最高出价，并且拍卖尚未结束。');
+        console.log("Bid account：", account);
+        console.log("tokenId:", account);
+        console.log("Bid bidValueWei:", bidValueWei);
+        console.log("Bid price:", price);
+        console.log("petAuction address:", petAuction);
+        setBidError('Bid failed, please ensure the bid is higher than the current maximum bid and that the auction has not yet ended.');
     }
 };
 

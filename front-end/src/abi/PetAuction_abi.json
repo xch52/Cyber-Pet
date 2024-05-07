@@ -111,6 +111,18 @@
 				"internalType": "uint256",
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "endTime",
+				"type": "uint256"
 			}
 		],
 		"name": "AuctionEnded",
@@ -142,6 +154,19 @@
 		"type": "event"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			}
+		],
+		"name": "bid",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
 		"anonymous": false,
 		"inputs": [
 			{
@@ -165,73 +190,6 @@
 		],
 		"name": "BidPlaced",
 		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "auctions",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "seller",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "startTime",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "endTime",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "highestBid",
-				"type": "uint256"
-			},
-			{
-				"internalType": "address",
-				"name": "highestBidder",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "reservePrice",
-				"type": "uint256"
-			},
-			{
-				"internalType": "bool",
-				"name": "active",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			}
-		],
-		"name": "bid",
-		"outputs": [],
-		"stateMutability": "payable",
-		"type": "function"
 	},
 	{
 		"inputs": [
@@ -287,6 +245,90 @@
 		"name": "endAuction",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "newReservePrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "newAuctionDuration",
+				"type": "uint256"
+			}
+		],
+		"name": "updateAuction",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "withdrawFailedRefund",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "auctions",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "seller",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "tokenId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "endTime",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "highestBid",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "highestBidder",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "reservePrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "bool",
+				"name": "active",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -582,36 +624,6 @@
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "tokenId",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "newReservePrice",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "newAuctionDuration",
-				"type": "uint256"
-			}
-		],
-		"name": "updateAuction",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "withdrawFailedRefund",
-		"outputs": [],
-		"stateMutability": "nonpayable",
 		"type": "function"
 	}
 ]
