@@ -1,5 +1,7 @@
 package com.uobfintech.nftpictures.service;
 
+import java.math.BigInteger;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,5 +16,5 @@ public interface ContractService {
 
     String callContractFunction(String functionName, List<Type> inputParameters, List<TypeReference<?>> outputParameters) throws Exception;
 
-    // void listenToMyEvent();
+    ZonedDateTime convertToZonedDateTimeUTCPlusOne(BigInteger timestamp);
 }

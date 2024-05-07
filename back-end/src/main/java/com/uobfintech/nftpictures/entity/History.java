@@ -5,8 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 @Data
 @Builder
@@ -17,9 +16,9 @@ public class History {
 
     private String sellerId;
 
-    private LocalDateTime date;
+    private ZonedDateTime dateTime;
 
-    private BigDecimal price;
+    private Double price;
 
     private String type;
 

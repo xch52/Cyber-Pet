@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.math.BigInteger;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
@@ -35,5 +37,7 @@ public class Pet {
     private Double price;
 
     private String states;
+
+    private String owner;
 
 }

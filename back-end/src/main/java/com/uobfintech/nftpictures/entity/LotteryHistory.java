@@ -6,8 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Data
@@ -17,9 +16,9 @@ import java.util.List;
 public class LotteryHistory {
     private String requester;
 
-    private LocalDate date;
+    private ZonedDateTime dateTime;
 
     private BigDecimal price;
 
-    private List<BigInteger> tokenIds;
+    private List<Integer> tokenIds;
 }

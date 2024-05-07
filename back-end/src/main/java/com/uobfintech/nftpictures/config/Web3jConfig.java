@@ -18,7 +18,7 @@ public class Web3jConfig {
 
     @Bean
     public String contractAddressLottery() {
-        return "0xa8d63dA4771B2D96B068E4C366d887Bf867BB756"; // 合约地址
+        return "0x134B34D990Cad0bAcac1d22CFACD0ac4Ce2aae20"; // 合约地址
     }
 
     @Bean
@@ -29,6 +29,11 @@ public class Web3jConfig {
     @Bean
     public String contractAddressMarket() {
         return "0x486717C03b19Df4CF1db10338b14793DBbF16AAA"; // 合约地址
+    }
+
+    @Bean
+    public String contractAddressNFT() {
+        return "0x1096324F09f566eC168C0630CeF649cC7a4578d2"; // 合约地址
     }
 
 

@@ -9,6 +9,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -38,6 +39,11 @@ public class MongoDAO {
 
     public MongoCollection<Document> getCollection(String collectionName) {
         return database.getCollection(collectionName);
+    }
+
+    @Bean
+    public String httpPrefix4Ipfs() {
+        return "https://ipfs.io/ipfs/";
     }
 
     @PreDestroy
