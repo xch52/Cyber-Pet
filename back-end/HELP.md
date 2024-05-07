@@ -1,7 +1,7 @@
 # Read Me First
 The following was discovered as part of building this project:
 
-* The original package name 'com.uobfintech.nft-pictures' is invalid and this project uses 'com.uobfintech.nftpictures' instead.
+* The original package name 'com.uobfintech.nft-pictures' is invalid and this project uses 'com.uobfintech.cyberpets' instead.
 
 # Getting Started
 
