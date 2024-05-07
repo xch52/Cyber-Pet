@@ -6,21 +6,20 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class History {
-    private String buyerId;
+public class LotteryHistory {
+    private String requester;
 
-    private String sellerId;
-
-    private LocalDateTime date;
+    private LocalDate date;
 
     private BigDecimal price;
 
-    private String type;
-
+    private List<BigInteger> tokenIds;
 }

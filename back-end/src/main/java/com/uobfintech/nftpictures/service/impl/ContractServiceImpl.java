@@ -4,9 +4,14 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -22,15 +27,20 @@ import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.Log;
+import java.time.ZoneId;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import com.uobfintech.nftpictures.abi.PetAuction_abi;
 import com.uobfintech.nftpictures.abi.PetLottery_abi;
 import com.uobfintech.nftpictures.abi.PetMarket_abi;
+import com.uobfintech.nftpictures.entity.Auction;
+import com.uobfintech.nftpictures.entity.LotteryHistory;
 import com.uobfintech.nftpictures.service.ContractService;
-import com.uobfintech.nftpictures.abi.PetAuction_abi;
 
 import static com.uobfintech.nftpictures.abi.PetAuction_abi.*;
 import static com.uobfintech.nftpictures.abi.PetLottery_abi.*;
@@ -45,6 +55,8 @@ public class ContractServiceImpl implements ContractService {
     private final String contractAddressAuction;
     private final String contractAddressMarket;
 
+    private List<Auction> auctionList;
+
     // Assume a very low gas price since it's a read operation.
 
 
@@ -53,6 +65,7 @@ public class ContractServiceImpl implements ContractService {
         this.contractAddressLottery = contractAddressLottery;
         this.contractAddressAuction = contractAddressAuction;
         this.contractAddressMarket = contractAddressMarket;
+        this.auctionList = new ArrayList<>();
     }
 
     private String getAddressFromTopic(String topicHex) {
@@ -69,14 +82,55 @@ public class ContractServiceImpl implements ContractService {
         return new BigInteger(data.substring(2), 16); // 去除前缀'0x'，假设数据是十六进制的
     }
 
+    public LocalDateTime convertBlockchainTimestamp(BigInteger timestamp) {
+        // 将秒转换为毫秒
+        long milliseconds = timestamp.multiply(BigInteger.valueOf(1000)).longValue();
+
+        // 创建Instant对象
+        Instant instant = Instant.ofEpochMilli(milliseconds);
+
+        // 转换为LocalDateTime（这里假设系统默认时区）
+
+        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+    public ZonedDateTime convertToZonedDateTimeUTCPlusOne(BigInteger timestamp) {
+        // 将秒转换为毫秒
+        long milliseconds = timestamp.multiply(BigInteger.valueOf(1000)).longValue();
+
+        // 创建Instant对象
+        Instant instant = Instant.ofEpochMilli(milliseconds);
+
+        // 转换为ZonedDateTime，在UTC+1时区
+
+        return instant.atZone(ZoneId.of("UTC+1"));
+    }
+
     @Async
     @Scheduled(fixedRate = 600000) // 每600000毫秒（即十分钟）执行一次
     public void callContractFunctionPeriodically() {
         try {
+//            RemoteFunctionCall<TransactionReceipt> remoteFunctionCall
+//                    = petAuctionAbi.checkAndEndAuctions();
+//
+//            String encodedFunction = remoteFunctionCall.encodeFunctionCall();
+//            Transaction transaction = Transaction.createEthCallTransaction(null, contractAddressAuction, encodedFunction);
+//            EthCall response = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).send();
+//
+//            if (response.hasError()) {
+//                System.out.println("Error: " + response.getError().getMessage());
+//            }
+//            List<Type> result = remoteFunctionCall.decodeFunctionResponse(response.getValue());
+//
+//            if (!result.isEmpty()){
+//                System.out.println(result.get(0).getValue().toString());
+//            }else {
+//                System.out.println("No result");
+//            }
             String functionName = "checkAndEndAuctions";
             // 调用具体的合约函数
             String result = callContractFunction(functionName);
             System.out.println("Contract function result: " + result);
+
         } catch (Exception e) {
             System.err.println("Error during contract function call: " + e.getMessage());
         }
@@ -139,7 +193,7 @@ public class ContractServiceImpl implements ContractService {
 
 
     @Async
-    @PostConstruct
+    //@PostConstruct
     public void init() {
         log.info("Subscribing to events...");
         subscribeToLotteryRequestedEvent();
@@ -150,6 +204,8 @@ public class ContractServiceImpl implements ContractService {
         subscribeToAuctionCreatedEvent();
         subscribeToBidPlacedEvent();
         subscribeToAuctionEndedEvent();
+        subscribeToPEvent();
+
     }
 
     private EthFilter createFilter(Event event, String contractAddress) {
@@ -158,54 +214,67 @@ public class ContractServiceImpl implements ContractService {
         return filter;
     }
 
+    // 定义处理错误的方法
+    private void handleError(Throwable e) {
+        System.err.println("Error occurred: " + e.getMessage());
+        e.printStackTrace();
+        // 这里可以添加更多的错误处理逻辑，例如重试机制或者报警通知等
+    }
+
 
     @Async
     public void subscribeToLotteryRequestedEvent() {
         EthFilter filter = createFilter(LOTTERYREQUESTED_EVENT, contractAddressLottery);
-        web3j.ethLogFlowable(filter).subscribe(this::handleLotteryRequestedEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleLotteryRequestedEvent, this::handleError);
     }
 
     @Async
     public void subscribeToLotteryFulfilledEvent() {
         EthFilter filter = createFilter(LOTTERYFULFILLED_EVENT, contractAddressLottery);
-        web3j.ethLogFlowable(filter).subscribe(this::handleLotteryFulfilledEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleLotteryFulfilledEvent, this::handleError);
     }
 
     @Async
     public void subscribeToPetListedEvent() {
         EthFilter filter = createFilter(PETLISTED_EVENT, contractAddressMarket);
-        web3j.ethLogFlowable(filter).subscribe(this::handlePetListedEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handlePetListedEvent, this::handleError);
     }
 
 
     @Async
     public void subscribeToPetSoldEvent() {
         EthFilter filter = createFilter(PETSOLD_EVENT, contractAddressMarket);
-        web3j.ethLogFlowable(filter).subscribe(this::handlePetSoldEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handlePetSoldEvent, this::handleError);
     }
 
     @Async
     public void subscribeToSaleCancelledEvent() {
         EthFilter filter = createFilter(SALECANCELLED_EVENT, contractAddressMarket);
-        web3j.ethLogFlowable(filter).subscribe(this::handleSaleCancelledEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleSaleCancelledEvent, this::handleError);
     }
 
     @Async
     public void subscribeToAuctionCreatedEvent() {
         EthFilter filter = createFilter(AUCTIONCREATED_EVENT, contractAddressAuction);
-        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionCreatedEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionCreatedEvent, this::handleError);
     }
 
     @Async
     public void subscribeToAuctionEndedEvent() {
         EthFilter filter = createFilter(AUCTIONENDED_EVENT, contractAddressAuction);
-        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionEndedEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionEndedEvent, this::handleError);
     }
 
     @Async
     public void subscribeToBidPlacedEvent() {
         EthFilter filter = createFilter(BIDPLACED_EVENT, contractAddressAuction);
-        web3j.ethLogFlowable(filter).subscribe(this::handleBidPlacedEvent);
+        web3j.ethLogFlowable(filter).subscribe(this::handleBidPlacedEvent, this::handleError);
+    }
+
+    @Async
+    public void subscribeToPEvent() {
+        EthFilter filter = createFilter(P_EVENT, contractAddressLottery);
+        web3j.ethLogFlowable(filter).subscribe(this::handlePEvent, this::handleError);
     }
 
 
@@ -222,8 +291,14 @@ public class ContractServiceImpl implements ContractService {
     private void handleLotteryFulfilledEvent(Log log) {
         System.out.println("handling Lottery Fulfilled..........");
         PetLottery_abi.LotteryFulfilledEventResponse lotteryFulfilledEventResponse = getLotteryFulfilledEventFromLog(log);
-        System.out.println("requester:"+ lotteryFulfilledEventResponse.requester);
-        System.out.println("token id:"+ lotteryFulfilledEventResponse.tokenIds);
+        LotteryHistory lotteryHistory = LotteryHistory.builder()
+                .requester(lotteryFulfilledEventResponse.requester)
+                .tokenIds(lotteryFulfilledEventResponse.tokenIds)
+                .build();
+
+        System.out.println(lotteryHistory);
+        //System.out.println("requester:"+ lotteryFulfilledEventResponse.requester);
+        //System.out.println("token id:"+ lotteryFulfilledEventResponse.tokenIds);
     }
 
     private void handlePetListedEvent(Log log) {
@@ -242,6 +317,8 @@ public class ContractServiceImpl implements ContractService {
         System.out.println("token id:"+ petSoldEventResponse.tokenId);
         System.out.println("buyer:"+ petSoldEventResponse.buyer);
         System.out.println("price:"+ petSoldEventResponse.price);
+        if (petSoldEventResponse.endTime != null)
+            System.out.println("price:"+ petSoldEventResponse.endTime);
     }
 
 
@@ -254,10 +331,18 @@ public class ContractServiceImpl implements ContractService {
     private void handleAuctionCreatedEvent(Log log) {
         System.out.println("handling Auction Created..........");
         AuctionCreatedEventResponse auctionCreatedEventResponse = getAuctionCreatedEventFromLog(log);
-        System.out.println("token id:"+ auctionCreatedEventResponse.tokenId);
-        System.out.println("reserve Price:"+ auctionCreatedEventResponse.reservePrice);
-        System.out.println("start Time:"+ auctionCreatedEventResponse.startTime);
-        System.out.println("tend Time:"+ auctionCreatedEventResponse.endTime);
+        Auction auction = getAuctionById(auctionCreatedEventResponse.tokenId);
+        auction.setSeller(auctionCreatedEventResponse.seller);
+
+        auction.setStartTime(convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.startTime));
+        auction.setEndTime(convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.endTime));
+        auctionList.add(auction);
+        System.out.println(auction);
+//        System.out.println("token id:"+ auctionCreatedEventResponse.tokenId);
+//        System.out.println("seller:"+ auctionCreatedEventResponse.seller);
+//        System.out.println("reserve Price:"+ auctionCreatedEventResponse.reservePrice);
+//        System.out.println("start Time:"+ auctionCreatedEventResponse.startTime);
+//        System.out.println("end Time:"+ auctionCreatedEventResponse.endTime);
     }
 
     private void handleBidPlacedEvent(Log log) {
@@ -272,9 +357,28 @@ public class ContractServiceImpl implements ContractService {
     private void handleAuctionEndedEvent(Log log) {
         System.out.println("handling Auction Ended..........");
         PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse =  getAuctionEndedEventFromLog(log);
-        System.out.println("token id: " + auctionEndedEventResponse.tokenId);
-        System.out.println("winner: "+auctionEndedEventResponse.winner);
-        System.out.println("amount: "+auctionEndedEventResponse.amount);
+        for (Auction auction : auctionList) {
+            if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId)) {
+                auction.setHighestBidder(auctionEndedEventResponse.winner);
+                auction.setHighestBid(auctionEndedEventResponse.amount);
+                System.out.println(auction);
+            }
+        }
+
+//        System.out.println("token id: " + auctionEndedEventResponse.tokenId);
+//        System.out.println("winner: "+auctionEndedEventResponse.winner);
+//        System.out.println("amount: "+auctionEndedEventResponse.amount);
+    }
+
+    private void handlePEvent(Log log) {
+        System.out.println("handling PPPP....");
+        PEventResponse pEventResponse = getPEventFromLog(log);
+        System.out.println("t: "+pEventResponse.t);
+
+    }
+
+    private Auction getAuctionById(BigInteger tokenId) {
+        return Auction.builder().tokenId(tokenId).build();
     }
 
 }

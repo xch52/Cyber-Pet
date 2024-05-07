@@ -21,7 +21,7 @@ public class MetadataController {
     @Autowired
     private MetadataService metadataService;
 
-    @GetMapping("")
+    @GetMapping("all")
     public Result getPets(@RequestParam(required = false) String filter,
                           @RequestParam(required = false) String sort,
                           @RequestParam(required = false) Integer limit) {
@@ -35,7 +35,8 @@ public class MetadataController {
 
         }
         if (limit != null){
-
+            List<Pet> petsLimit = pets.subList(0, Math.min(pets.size(), limit));
+            return Result.success(petsLimit);
         }
         return Result.success(pets);
     }

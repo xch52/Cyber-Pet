@@ -43,6 +43,8 @@ public class MetadataServiceImpl implements MetadataService {
 
         Double price = doc.getDouble("price");
         String states = doc.getString("states");
+        String petclass = doc.getString("petclass");
+        String description = doc.getString("description");
 
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 //
@@ -69,6 +71,8 @@ public class MetadataServiceImpl implements MetadataService {
                 .attributes(attributes)
                 .price(price)
                 .states(states)
+                .petclass(petclass)
+                .description(description)
                 .build();
     }
 
@@ -94,7 +98,7 @@ public class MetadataServiceImpl implements MetadataService {
     @Override
     public List<Pet> findAllPets() {
         // 连接到MongoDB服务器
-        MongoCollection<Document> collection = mongoDAO.getCollection("user");
+        MongoCollection<Document> collection = mongoDAO.getCollection("pet");
 
         // 检索所有文档并存储到列表中
         List<Pet> pets = new ArrayList<>();

@@ -22,11 +22,15 @@ public class Pet {
 
     private String imageUrl;
 
+    private String petclass;
+
     private List<String> attributes;
 
-    // private String description;
+    private String description;
 
     private List<History> history;
+
+    private List<LotteryHistory> lotteryHistory;
 
     private Double price;
 
