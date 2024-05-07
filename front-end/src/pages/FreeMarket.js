@@ -33,6 +33,7 @@ const sections = [
   { title: 'AuctionMarket', url: '/AuctionMarket' },
   { title: 'FreeMarket', url: '/FreeMarket' },
   { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'History', url: '/History' },
   { title: 'Portfolio', url: '/Portfolio' },
   //{ title: 'About us', url: '#' }
 ];
@@ -263,7 +264,7 @@ export default function FreeMarket() {
                 </RadioGroup>
               </FormControl>
 
-              {/* 状态选项卡 */}
+              {/* 状态选项卡
               <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
                 State
               </Typography>
@@ -271,7 +272,7 @@ export default function FreeMarket() {
               <FormGroup>
                 <FormControlLabel control={<Checkbox checked={showOnSale} onChange={(e) => stateChange(e, setShowOnSale)} />} label="On Sale" />
                 <FormControlLabel control={<Checkbox checked={showSold} onChange={(e) => stateChange(e, setShowSold)} />} label="Sold" />
-              </FormGroup>
+              </FormGroup> */}
 
             </Grid>
 

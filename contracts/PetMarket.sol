@@ -86,7 +86,7 @@ contract PetMarket is ReentrancyGuard {
 
     // Events for logging activities on the blockchain.
     event PetListed(uint256 indexed tokenId, address indexed seller, uint256 price);
-    event PetSold(uint256 indexed tokenId, address indexed buyer, uint256 price);
+    event PetSold(uint256 indexed tokenId, address indexed buyer, uint256 price, uint256 timestamp);
     event SaleCancelled(uint256 indexed tokenId);
 
     // Constructor to initialize the NFT contract address.
@@ -131,7 +131,7 @@ contract PetMarket is ReentrancyGuard {
         petNFT.safeTransferFrom(sale.seller, msg.sender, tokenId);
         payable(sale.seller).transfer(msg.value);
 
-        emit PetSold(tokenId, msg.sender, sale.price);
+        emit PetSold(tokenId, msg.sender, sale.price, block.timestamp);
     }
 
     // Lists all active sales.

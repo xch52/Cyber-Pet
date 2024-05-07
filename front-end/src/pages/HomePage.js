@@ -20,6 +20,7 @@ const sections = [
   { title: 'AuctionMarket', url: '/AuctionMarket' },
   { title: 'FreeMarket', url: '/FreeMarket' },
   { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'History', url: '/History' },
   { title: 'Portfolio', url: '/Portfolio' },
   //{ title: 'About us', url: '#' }
 ];

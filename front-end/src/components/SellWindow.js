@@ -52,6 +52,8 @@ export default function SellWindows({ id }) {
     event.preventDefault();
     if (!petAuction || !account) {
         alert('Please connect your wallet first.');
+
+
         return;
     }
     
@@ -153,7 +155,7 @@ export default function SellWindows({ id }) {
             </Grid>
 
             {/* 描述输入框 */}
-            <TextField
+            {/* <TextField
               margin="normal"
               required
               fullWidth
@@ -164,7 +166,7 @@ export default function SellWindows({ id }) {
               autoComplete="current-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-            />
+            /> */}
 
             {/* 承诺勾选框 */}
             <FormControlLabel

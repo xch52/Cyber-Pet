@@ -13,6 +13,8 @@ import HomeExample1 from '../assets/HomeExample1.jpg';
 import HomeExample2 from '../assets/HomeExample2.jpg';
 import Lottery from '../components/Lottery';
 import { makeStyles } from '@mui/styles';
+import { useEffect, useState } from 'react';
+import { useWeb3 } from '../Web3Context'; 
 import GaExample1 from '../assets/GaExample1.jpg';
 // Image Source: https://lexica.art/prompt/b946a95c-e12e-4e8a-a92f-e3969d6e68fd
 import GaExample2 from '../assets/GaExample2.jpg'
@@ -26,19 +28,35 @@ const sections = [
   { title: 'AuctionMarket', url: '/AuctionMarket' },
   { title: 'FreeMarket', url: '/FreeMarket' },
   { title: 'Gashapon', url: '/Gashapon' },
+  { title: 'History', url: '/History' },
   { title: 'Portfolio', url: '/Portfolio' },
   //{ title: 'About us', url: '#' }
 ];
 
-const itemData = [
+// const itemData = [
+//   {
+//     img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
+//     title: 'Cat1',
+//   },
+//   {
+//     img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
+//     title: 'Dog1',
+//   },
+// ];
+
+const products = [
   {
-    img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
-    title: 'Cat1',
-  },
-  {
-    img: 'https://ipfs.io/ipfs/QmdXJpV7CQNSbm2zE4p4rWZgbDdumYfBfqdieG64FapVU3',
-    title: 'Dog1',
-  },
+    id: 1,
+    image: HomeExample1,
+    title: "Adventure Cat",
+    attributes: ['happy', 'sad'],
+    description: "This is a professional cat who loves adventure.",
+    history:[],
+    price: 3.5,
+    states: '1',
+    alt: "Product 1",
+  }
+  // 可以根据需要添加更多商品
 ];
 
 const defaultTheme = createTheme();
@@ -132,6 +150,42 @@ const footers = [
 
 
 export default function GashPage() {
+
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://44.202.121.86:9000/api/pets/1'); // 你的API端点
+        const json = await response.json();
+  
+        if (json.code === 1 && json.msg === "success") {
+          const productData = json.data;
+          const newProduct = {
+            id: productData.id,
+            image: productData.imageUrl, // 从服务器获取图片URL
+            title: productData.title,
+            attributes: productData.attributes, // 直接使用从服务器获得的属性
+            description: "This is a professional cat who loves adventure.", // 你可以根据需要从服务器获取或使用静态描述
+            history: productData.history || [], // 使用从服务器获得的历史，或在无数据时使用空数组
+            price: productData.price,
+            states: productData.states,
+            alt: "Product " + productData.id // 或任何其他适当的替代文本
+          };
+          setProducts([newProduct]); // 这将设置产品数组为包含单一产品的数组，或者你可以添加到现有数组中
+          console.log(json.data);
+        } else {
+          console.error('Server response not successful:', json.msg);
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  
   return (
     <ThemeProvider theme={defaultTheme}>
       <CssBaseline />
@@ -139,12 +193,12 @@ export default function GashPage() {
         <Header title="CyberPet" sections={sections} />
 
         <Box sx={{ overflowX: 'auto' }}>
-          <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)' }} cols={itemData.length} rowHeight={300}>
-            {itemData.map((item) => (
-              <ImageListItem key={item.img}>
+          <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)' }} cols={products.length} rowHeight={300}>
+            {products.map((product) => (
+              <ImageListItem key={product.id}>
                 <img
-                  src={`${item.img}`}
-                  alt={item.title}
+                  src={product.image}
+                  alt={product.alt || 'Product image'}
                   loading="lazy"
                 />
               </ImageListItem>

@@ -12,7 +12,7 @@ import Footer from '../components/Footer';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomeExample1 from '../assets/HomeExample1.jpg'
 import HomeExample2 from '../assets/HomeExample2.jpg'
-import SellCard from '../components/SellCard';
+import SoldCard from '../components/SoldCard';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -76,7 +76,7 @@ const products = [
 const defaultTheme = createTheme();
 
 
-export default function AuctionMarket() {
+export default function History() {
 
   const { petAuction, petNFT, web3 } = useWeb3();
   const [isLoading, setIsLoading] = useState(true);
@@ -133,38 +133,44 @@ export default function AuctionMarket() {
 
   // 获取正在拍卖的宠物信息
   useEffect(() => {
-    
-    const fetchAuctions = async () => {
-      if (petAuction && web3 && petNFT) {
-        setIsLoading(true);
-        try {
-          // 调用智能合约的 listActiveAuctionsBrief 函数
-          const [tokenIds, auctionsBrief, petsBrief] = await petAuction.methods.listActiveAuctionsBrief().call();
 
-          const newProducts = tokenIds.map((tokenId, index) => ({
-            id: tokenId,
-            image: petsBrief[index].uri, // 需要处理获取NFT图片的逻辑
-            title: petsBrief[index].name, // 假设PetAttributes包含一个name属性
-            petclass: petsBrief[index].level.toString(), // 假设PetAttributes包含一个class属性
-            attribute: petsBrief[index].attributes, // 假设attributes是一个数组
-            description: petsBrief[index].description, // 假设PetAttributes包含一个description属性
-            price: web3.utils.fromWei(auctionsBrief[index].highestBid, 'ether'),
-            prebid: [], // 如果合约提供了相关数据，可以在这里添加
-            states: auctionsBrief[index].active ? "1" : "0",
-            deadline: new Date(auctionsBrief[index].endTime * 1000).toLocaleString(),
-            alt: 'NFT Image Alt Text' // 从NFT metadata获取或自定义
-          }));
-          setProducts(newProducts);
-        } catch (error) {
-          console.error('Error fetching auctions:', error);
+    const fetchSoldProducts = async () => {
+      setProducts([]);
+      try {
+        const response = await fetch('http://44.202.121.86:9000/api/pets/1');
+        const json = await response.json();
+        if (json.code === 1 && json.msg === "success") {
+          const productData = json.data;
+          const soldProduct = {
+            id: productData.id,
+            image: productData.imageUrl,
+            title: productData.title,
+            petclass: "1",
+            attribute: productData.attributes,
+            description: "This is a professional cat who loves adventure.",
+            prebid: productData.history || [],
+            price: productData.price,
+            states: productData.states,
+            alt: "Product " + productData.id
+          };
+
+          setProducts([soldProduct]);  
+        } else {
+          console.error('Server response not successful:', json.msg);
         }
+      } catch (error) {
+        console.error('Error fetching products from API:', error);
       }
-    };
+    }
 
-    fetchAuctions();
+
+    fetchSoldProducts();
 
   }, [petAuction, petNFT, web3]);
 
+
+
+  // 有 Auctions 时
 
     return (
       <ThemeProvider theme={defaultTheme}>
@@ -240,34 +246,13 @@ export default function AuctionMarket() {
                     <FormControlLabel value="lowToHigh" control={<Radio />} label="From lowest to highest" />
                   </RadioGroup>
                 </FormControl>
-
-                {/* 状态选项卡
-                <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                  State
-                </Typography>
-
-                <FormGroup>
-                  <FormControlLabel control={<Checkbox checked={showOnSale} onChange={(e) => stateChange(e, setShowOnSale)} />} label="On Sale" />
-                  <FormControlLabel control={<Checkbox checked={showSold} onChange={(e) => stateChange(e, setShowSold)} />} label="Sold" />
-                </FormGroup> */}
-
-                {/* <RadioGroup
-                  name="viewState"
-                  value={viewState}
-                  onChange={(e) => setViewState(e.target.value)}
-                  >
-                    <FormControlLabel value="onSale" control={<Radio />} label="On-Sale" />
-                    <FormControlLabel value="sold" control={<Radio />} label="Sold" />
-                </RadioGroup> */}
-  
-
               </Grid>
 
               {/* 商品展示卡 */}
               <Grid item xs={12} md={9} container spacing={4} justifyContent="center">  {/* Adjust md value to change the width of the product grid */}
                 {filteredProducts.map(product => (
                   <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
-                    <SellCard
+                    <SoldCard
                       image={product.image}
                       title={product.title}
                       petclass={product.petclass}
