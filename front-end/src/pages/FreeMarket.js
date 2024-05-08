@@ -135,7 +135,7 @@ export default function FreeMarket() {
       if (petMarket && petNFT) {
         try {
           // 直接调用合约方法并等待结果
-          const result = await petMarket.methods.listActiveSales().call();
+          const result = await petMarket.methods.listActiveSalesInfo().call();
           const tokenIds = result[0];
           const salesData = result[1];
     
@@ -145,7 +145,7 @@ export default function FreeMarket() {
             const attributes = await petNFT.methods.getPetAttributes(tokenId).call();
             return {
               id: tokenId,
-              image: `https://ipfs.io/ipfs/${attributes.uri}`,
+              image: attributes.url,
               title: attributes.name,
               petclass: attributes.level.toString(),
               attribute: [attributes.appearance, attributes.character],
@@ -260,7 +260,7 @@ export default function FreeMarket() {
                     price={`${product.price} ETH`}
                     orignPrice={product.price}
                     states={product.states}
-                    deadline={product.deadline}
+                    //deadline={product.deadline}
                     alt={product.alt}
                     web3={web3}
                   />

@@ -67,10 +67,10 @@ const tiers_1 = [
     {
         title: 'Luxury',
         subheader: 'Most popular',
-        price: '0.05',
-        chance: '10 chances',
+        price: '0.01',
+        chance: '5 chances',
         description: [
-            '10 chances to wish',
+            '5 chances to wish',
             '2 starts pet is promised',
             'Higher probability',
             'Lower single price',
@@ -84,7 +84,7 @@ const tiers_2 = [
     {
         title: 'Basic',
         subheader: 'Worth trying',
-        price: '0.006',
+        price: '0.002',
         chance: '1 chance',
         description: [
             '1 chance to wish',

@@ -278,6 +278,12 @@
 			{
 				"indexed": false,
 				"internalType": "string",
+				"name": "url",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "string",
 				"name": "uri",
 				"type": "string"
 			}
@@ -371,6 +377,11 @@
 		"name": "getMyPets",
 		"outputs": [
 			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			},
+			{
 				"components": [
 					{
 						"internalType": "uint256",
@@ -395,6 +406,11 @@
 					{
 						"internalType": "string",
 						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "url",
 						"type": "string"
 					},
 					{
@@ -446,6 +462,11 @@
 					{
 						"internalType": "string",
 						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "url",
 						"type": "string"
 					},
 					{
@@ -535,6 +556,11 @@
 			{
 				"internalType": "string",
 				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "url",
 				"type": "string"
 			},
 			{
@@ -639,6 +665,11 @@
 			{
 				"internalType": "string",
 				"name": "description",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "url",
 				"type": "string"
 			},
 			{
