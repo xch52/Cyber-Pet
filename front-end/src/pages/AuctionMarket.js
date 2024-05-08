@@ -295,13 +295,12 @@ export default function AuctionMarket() {
                       petclass={product.petclass}
                       attribute={product.attribute}
                       description={product.description}
-                      //price={`${product.reservePrice} ETH`}
                       price={`${Math.max(product.highestBid, product.reservePrice)} ETH`}
                       prebid={product.prebid}
                       states={product.states}
                       deadline={product.deadline}
                       alt={product.alt}
-                      tokenId={product.tokenId}
+                      tokenId={product.id}
                       petAuction={petAuction}
                       web3={web3}
                     //account={account}

@@ -35,18 +35,41 @@ function Copyright(props) {
 
 const defaultTheme = createTheme();
 
-export default function SellWindows({ id }) {
+export default function SellWindows({ petsId }) {
 
-  const { petAuction, web3, account } = useWeb3()
+  const { petNFT, petAuction, web3, account } = useWeb3()
   const [price, setPrice] = React.useState('');
   const [duration, setDuration] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [tokenId, setTokenId] = useState(id); // 假设 id 是传入的 NFT tokenId
+  //const [tokenId, setTokenId] = useState(id); // 假设 id 是传入的 NFT tokenId
 
   const [isCheckboxChecked, setIsCheckboxChecked] = React.useState(false);
   const [saleType, setSaleType] = React.useState('auction');
 
-  const isFormFilled = price && duration && description && isCheckboxChecked;
+  const isFormFilled = price && duration && isCheckboxChecked;
+
+  const petApprove = async () => {
+    if (!petNFT ||!petAuction || !account) {
+      alert('Please connect your wallet and ensure the auction contract is loaded.');
+      return;
+    }
+
+    const priceWei = web3.utils.toWei(price, 'ether');
+    const durationSeconds = parseInt(duration) * 60;
+    console.log("Account: ", account);
+    console.log("tokenId: ", petsId);
+
+
+    try {
+      const tx = await petNFT.methods.approve(petAuction.options.address, petsId).send({ from: account });
+      console.log('NFT has been approved to auction contract');
+      return tx;
+    } catch (error) {
+      console.error('Error approving NFT:', error);
+      throw error; // 抛出异常供上层处理
+    }
+  };
+
 
   const clickSubmit = async (event) => {
     event.preventDefault();
@@ -55,15 +78,25 @@ export default function SellWindows({ id }) {
       return;
     }
     
+    try {
+      await petApprove();  // Ensure NFT is approved before transaction
+    } catch (error) {
+      console.error('Error approving NFT:', error);
+      alert('Failed to approve NFT for the transaction.');
+      return;  // If approval fails, stop execution
+    }
+
     const priceWei = web3.utils.toWei(price, 'ether');
     const durationSeconds = parseInt(duration) * 60;
+    console.log("account: ", account);
 
+    
     try {
       if (saleType === 'auction') {
-        await petAuction.methods.createAuction(tokenId, priceWei, durationSeconds).send({ from: account });
+        await petAuction.methods.createAuction(petsId, priceWei, durationSeconds).send({ from: account });
         alert('Auction created successfully!');
       } else if (saleType === 'normal') {
-        await petAuction.methods.listPetForSale(tokenId, priceWei).send({ from: account });
+        await petAuction.methods.listPetForSale(petsId, priceWei).send({ from: account });
         alert('Pet listed for sale successfully!');
       }
     } catch (error) {

@@ -5,14 +5,15 @@ import { useState, useEffect } from 'react';
 import StarIcon from '@mui/icons-material/Star';
 import { Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from '@mui/material';
 import { ethers } from 'ethers';
+import { useWeb3 } from '../Web3Context';
 
 
-export default function SellCard({ image, title, petclass, attribute, description, price, states, deadline, alt }) {
+export default function SellCard({ tokenId, image, title, petclass, attribute, description, price, orignPrice, states, deadline, alt, web3 }) {
 
     // 定义各种状态变量
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
     const [open, setOpen] = useState(false);
-
+    const { petMarket } = useWeb3();
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -59,20 +60,39 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
 
     // 控制购买按钮
     const buyItem = async () => {
-        try {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await provider.send("eth_requestAccounts", []);
-            const signer = provider.getSigner();
-            const transaction = {
-                to: 'YOUR_CONTRACT_ADDRESS', // 合约地址
-                value: ethers.utils.parseEther(price.toString()) // 金额转换为Wei
-            };
-
-            const tx = await signer.sendTransaction(transaction);
-            console.log('Transaction:', tx);
-        } catch (error) {
-            console.error('Purchase failed:', error);
+        if (!petMarket) {
+            alert("Contract not loaded, check connection to Ethereum network.");
+            return;
         }
+        try {
+            console.log('Original Price:', orignPrice);
+            const weiValue = web3.utils.toWei(orignPrice.toString(), 'ether');
+            
+            console.error('weiValue:', weiValue);
+            const transaction = await petMarket.methods.buyPet(tokenId).send({ from: window.ethereum.selectedAddress, value: weiValue });
+            console.log('Transaction successful:', transaction);
+        } catch (error) {
+            console.log('weiValue:', orignPrice.toString()); 
+            console.error('Purchase failed:', error);
+            console.log('Error object:', error); 
+            alert('Purchase failed. See console for details.');
+        }
+    };
+
+
+    function formatPrice(priceInEth) {
+        if (!priceInEth || isNaN(parseFloat(priceInEth))) {
+            return '0'; // 或者根据你的需求返回 'Unavailable' 或其他
+        }
+
+        const formattedPrice = parseFloat(priceInEth);
+        // 如果价格小于0.00001，使用科学计数法表示
+        if (formattedPrice < 0.00001) {
+            return formattedPrice.toExponential(2);
+        }
+
+        // 大于或等于0.00001时，直接显示，删除末尾不必要的0
+        return formattedPrice.toString().replace(/\.?0+$/, '');
     }
 
 
@@ -110,7 +130,7 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
             </CardActionArea>
             <CardActions>
                 <Typography variant="h6" color="text.secondary" sx={{ flexGrow: 1, color: 'rgba(255, 0, 0, 0.6)' }}>
-                    {price}
+                    {formatPrice(price)}
                 </Typography>
 
                 <Button

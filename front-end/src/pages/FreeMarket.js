@@ -11,13 +11,11 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomeExample1 from '../assets/HomeExample1.jpg'
-import HomeExample2 from '../assets/HomeExample2.jpg'
 import SellFreeCard from '../components/SellFreeCard';
 import Radio from '@mui/material/Radio';
 import RadioGroup from '@mui/material/RadioGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormControl from '@mui/material/FormControl';
-import { useState } from 'react';
 import Paper from '@mui/material/Paper';
 import FormGroup from '@mui/material/FormGroup';
 import Checkbox from '@mui/material/Checkbox';
@@ -26,6 +24,8 @@ import TextField from '@mui/material/TextField';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useWeb3 } from '../Web3Context';
+import { useEffect, useState } from 'react';
 
 
 const sections = [
@@ -40,82 +40,17 @@ const sections = [
 
 const products = [
   {
-    id: 1,
-    image: HomeExample1,
-    title: "Adventure Cat",
-    petclass: "1",
-    attribute:["Cool","Nice"],
-    description: "This is a professional cat who loves adventure.",
-    price: 3.5,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "1",
-    deadline: Math.floor(Date.now() / 1000) + 2000,
-    alt: "Product 1",
-  },
-  {
-    id: 2,
-    image: HomeExample2,
-    title: "Fashionable Dog",
-    petclass: "2",
-    attribute:["Cool","Nice"],
-    description: "This is a dog who loves fashion and music.",
-    price: 2.1,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "1",
-    deadline: Math.floor(Date.now() / 1000) + 1000,
-    alt: "Product 2",
-  },
-  {
-    id: 3,
-    image: HomeExample1,
-    title: "Adventure Cat",
-    petclass: "1",
-    attribute:["Cool","Nice"],
-    description: "This is a professional cat who loves adventure.",
-    price: 1.8,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "0",
-    deadline: Math.floor(Date.now() / 1000) + 200,
-    alt: "Product 3",
-  },
-  {
-    id: 4,
-    image: HomeExample2,
-    title: "Fashionable Dog",
-    petclass: "2",
-    attribute:["Cool","Nice"],
-    description: "This is a dog who loves fashion and music.",
-    price: 0.9,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "0",
-    deadline: Math.floor(Date.now() / 1000) + 600,
-    alt: "Product 4",
-  },
-  {
-    id: 5,
-    image: HomeExample2,
-    title: "Fashionable Dog",
-    petclass: "2",
-    attribute:["Cool","Nice"],
-    description: "This is a dog who loves fashion and music.",
-    price: 1.2,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "1",
-    deadline: Math.floor(Date.now() / 1000) + 500,
-    alt: "Product 5",
-  },
-  {
-    id: 6,
-    image: HomeExample1,
-    title: "Adventure Cat",
-    petclass: "3",
-    attribute:["Cool","Nice"],
-    description: "This is a professional cat who loves adventure.",
-    price: 3.1,
-    prebid:[0.1,0.2,0.3,0.4,0.5],
-    states: "1",
-    deadline: Math.floor(Date.now() / 1000) + 50,
-    alt: "Product 6",
+    // id: 1,
+    // image: HomeExample1,
+    // title: "Adventure Cat",
+    // petclass: "1",
+    // attribute:["Cool","Nice"],
+    // description: "This is a professional cat who loves adventure.",
+    // price: 3.5,
+    // prebid:[0.1,0.2,0.3,0.4,0.5],
+    // states: "1",
+    // deadline: Math.floor(Date.now() / 1000) + 2000,
+    // alt: "Product 1",
   },
   // 可以根据需要添加更多商品
 ];
@@ -152,6 +87,8 @@ export default function FreeMarket() {
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
 
+  const { petMarket, petNFT, web3 } = useWeb3();
+  const [products, setProducts] = useState([]);
 
   const classChange = (event, setter) => {
     setter(event.target.checked);
@@ -169,6 +106,7 @@ export default function FreeMarket() {
     setMinPrice('');
     setMaxPrice('');
   };
+
 
   const filteredProducts = products.filter(product => {
     const classCheck = (showClass1 && product.petclass === "1") ||  // 宠物等级过滤器
@@ -189,6 +127,47 @@ export default function FreeMarket() {
     }
     return 0; // Return 0 to maintain original order when 'none'
   });
+
+
+
+  useEffect(() => {
+    const fetchActiveSales = async () => {
+      if (petMarket && petNFT) {
+        try {
+          // 直接调用合约方法并等待结果
+          const result = await petMarket.methods.listActiveSales().call();
+          const tokenIds = result[0];
+          const salesData = result[1];
+    
+          // 遍历 tokenIds，使用对应的销售数据
+          const productsTemp = await Promise.all(tokenIds.map(async (tokenId, index) => {
+            // 获取每个 tokenId 对应的宠物属性
+            const attributes = await petNFT.methods.getPetAttributes(tokenId).call();
+            return {
+              id: tokenId,
+              image: `https://ipfs.io/ipfs/${attributes.uri}`,
+              title: attributes.name,
+              petclass: attributes.level.toString(),
+              attribute: [attributes.appearance, attributes.character],
+              description: attributes.description,
+              price: web3.utils.fromWei(salesData[index].price.toString(), 'ether'),  // 确保转换为字符串，处理大数字
+              prebid: [],
+              states: salesData[index].isActive ? "1" : "0",  // 判断是否在售
+              deadline: Math.floor(Date.now() / 1000) + 2000,  // 示例值，应从合约获取实际值
+              alt: `Pet ${attributes.name}`,
+            };
+          }));
+    
+          setProducts(productsTemp);
+        } catch (error) {
+          console.error("Failed to fetch active sales:", error);
+        }
+      }
+    };
+    
+
+    fetchActiveSales();
+  }, [petMarket, petNFT]);
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -264,15 +243,6 @@ export default function FreeMarket() {
                 </RadioGroup>
               </FormControl>
 
-              {/* 状态选项卡
-              <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                State
-              </Typography>
-
-              <FormGroup>
-                <FormControlLabel control={<Checkbox checked={showOnSale} onChange={(e) => stateChange(e, setShowOnSale)} />} label="On Sale" />
-                <FormControlLabel control={<Checkbox checked={showSold} onChange={(e) => stateChange(e, setShowSold)} />} label="Sold" />
-              </FormGroup> */}
 
             </Grid>
 
@@ -281,16 +251,18 @@ export default function FreeMarket() {
               {filteredProducts.map(product => (
                 <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
                   <SellFreeCard
+                    tokenId={product.id}
                     image={product.image}
                     title={product.title}
                     petclass={product.petclass}
                     attribute={product.attribute}
                     description={product.description}
                     price={`${product.price} ETH`}
-                    prebid={product.prebid}
+                    orignPrice={product.price}
                     states={product.states}
                     deadline={product.deadline}
                     alt={product.alt}
+                    web3={web3}
                   />
                 </Grid>
               ))}

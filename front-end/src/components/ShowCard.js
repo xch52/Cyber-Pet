@@ -14,7 +14,7 @@ import SellWindow from '../components/SellWindow';
 import StarIcon from '@mui/icons-material/Star';
 
 
-export default function ShowCard({ id, image, title, petclass, attribute, description, alt }) {
+export default function ShowCard({ tokenId, image, title, petclass, attribute, description, alt }) {
   
   const [openFeed, setOpenFeed] = useState(false);
   const [openSell, setOpenSell] = useState(false);
@@ -92,7 +92,7 @@ export default function ShowCard({ id, image, title, petclass, attribute, descri
 
           {/* SellWindow组件被用作对话框内容 */}
           <SellWindow
-            id={id}
+            petsId={tokenId}
           />
 
         </Dialog>

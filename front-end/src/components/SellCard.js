@@ -102,7 +102,7 @@ const bidSubmit = async () => {
     } catch (error) {
         console.error("Bid failed：", error);
         console.log("Bid account：", account);
-        console.log("tokenId:", account);
+        console.log("tokenId:", tokenId);
         console.log("Bid bidValueWei:", bidValueWei);
         console.log("Bid price:", price);
         console.log("petAuction address:", petAuction);
