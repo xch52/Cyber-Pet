@@ -26,7 +26,7 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
 
     // Events for logging activities on the blockchain
     event LotteryRequested(address indexed requester, uint256 requestId, uint256 amount);
-    event LotteryFulfilled(address indexed requester, uint256[] tokenIds, uint timestamp);
+    event LotteryFulfilled(address indexed requester, uint256 requestId, uint256[] tokenIds, uint timestamp);
     event HighLevelPetEnsured(address indexed requester, uint256 highLevelTokenId, uint256 replacedTokenId);
     event NFTReceived(address operator, address from, uint256 tokenId, bytes data);
 
@@ -113,7 +113,7 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
             petNFTContract.transferFrom(address(this), player, tokenId);
         }
 
-        emit LotteryFulfilled(player, tokenIds, block.timestamp);
+        emit LotteryFulfilled(player, requestId, tokenIds, block.timestamp);
     }
 
     // Fallback and receive functions to handle direct Ether transactions
