@@ -15,6 +15,7 @@ contract PetNFT is ERC721URIStorage, Ownable {
         string appearance;     // Descriptive word for pet's appearance.
         string character;      // Descriptive word for pet's character traits.
         string description;    // Detailed description of the pet.
+        string url;            // URL for pet's image
         string uri;            // URI for pet's metadata.
     }
 
@@ -22,7 +23,7 @@ contract PetNFT is ERC721URIStorage, Ownable {
     mapping(uint256 => PetAttributes) public petDetails;
     // Mapping from level to array of token IDs, used to store pets by their levels.
     mapping(uint256 => uint256[]) private petsByLevel;
-    event PetMinted(uint256 tokenId, address to, uint256 level, string name, string appearance, string character, string description, string uri);
+    event PetMinted(uint256 tokenId, address to, uint256 level, string name, string appearance, string character, string description, string url, string uri);
     // Constructor to initialize the NFT collection.
     constructor() ERC721("CryptoPets", "PET") Ownable(msg.sender) {}
 
@@ -42,6 +43,7 @@ contract PetNFT is ERC721URIStorage, Ownable {
         string memory appearance,
         string memory character,
         string memory description,
+        string memory url,
         string memory uri
     ) public onlyOwnerOrLottery {
         require(level >= 1 && level <= 3, "Invalid pet level, must be between 1 and 3.");
@@ -52,12 +54,13 @@ contract PetNFT is ERC721URIStorage, Ownable {
             appearance: appearance,
             character: character,
             description: description,
+            url: url,
             uri: uri
         });
         _safeMint(to, tokenId); // Mint the token.
         _setTokenURI(tokenId, uri); // Set the URI for the token.
         petsByLevel[level].push(tokenId); // Add the token ID to the array for the corresponding level.
-        emit PetMinted(tokenId, to, level, name, appearance, character, description, uri);
+        emit PetMinted(tokenId, to, level, name, appearance, character, description, url, uri);
     }
 
     // Function to retrieve an array of pet token IDs by their level.
@@ -99,22 +102,25 @@ contract PetNFT is ERC721URIStorage, Ownable {
     }
 
     // Function to return all pets owned by the caller of the function
-    function getMyPets() public view returns (PetAttributes[] memory) {
+    function getMyPets() public view returns (uint256[] memory, PetAttributes[] memory) {
+        
         address owner = msg.sender; // Using msg.sender to reference the caller of the function
         uint256 totalPets = nextTokenId; 
         uint256 ownerCount = balanceOf(owner); // Number of pets owned by the caller
         PetAttributes[] memory petsOwned = new PetAttributes[](ownerCount);
+        uint256[] memory tokenIds = new uint256[](ownerCount);
         uint256 counter = 0;
 
         for (uint256 i = 0; i < totalPets; i++) { 
             if (ownerOf(i) == owner) { // Check if the owner of tokenId i is the caller
                 petsOwned[counter] = petDetails[i];
+                tokenIds[counter] = i;
                 counter++;
                 if (counter == ownerCount) break; // All pets found, exit the loop
             }
         }
 
-        return petsOwned;
+        return (tokenIds, petsOwned);
     }
 
 }

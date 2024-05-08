@@ -166,6 +166,11 @@
 					},
 					{
 						"internalType": "string",
+						"name": "url",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
 						"name": "uri",
 						"type": "string"
 					}
