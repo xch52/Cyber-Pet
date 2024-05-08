@@ -111,6 +111,18 @@
 				"internalType": "uint256",
 				"name": "timestamp",
 				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "startTime",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "endTime",
+				"type": "uint256"
 			}
 		],
 		"name": "AuctionEnded",
@@ -449,6 +461,11 @@
 					},
 					{
 						"internalType": "string",
+						"name": "url",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
 						"name": "uri",
 						"type": "string"
 					}
@@ -555,6 +572,11 @@
 					{
 						"internalType": "string",
 						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "url",
 						"type": "string"
 					},
 					{

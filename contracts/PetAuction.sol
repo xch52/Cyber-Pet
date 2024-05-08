@@ -29,7 +29,7 @@ contract PetAuction is ReentrancyGuard {
     // Events that emit on actions taken within the contract.
     event AuctionCreated(uint256 indexed tokenId, address seller, uint256 reservePrice, uint256 startTime, uint256 endTime);
     event BidPlaced(uint256 indexed tokenId, address bidder, uint256 amount);
-    event AuctionEnded(uint256 indexed tokenId, address winner, uint256 amount, uint256 timestamp);
+    event AuctionEnded(uint256 indexed tokenId, address winner, uint256 amount, uint256 timestamp, uint256 startTime, uint256 endTime);
     event AuctionAutoEnded(uint256 indexed tokenId, address winner, uint256 amount);
     event AuctionUpdated(uint256 indexed tokenId, uint256 newReservePrice, uint256 newEndTime);
     event AuctionCancelled(uint256 indexed tokenId);
@@ -117,7 +117,7 @@ contract PetAuction is ReentrancyGuard {
             petNFT.transferFrom(address(this), auction.seller, tokenId);
         }
         activeAuctions.remove(tokenId); // Remove the auction from the active list
-        emit AuctionEnded(tokenId, auction.highestBidder, auction.highestBid, block.timestamp); // Emit an event indicating the auction has ended
+        emit AuctionEnded(tokenId, auction.highestBidder, auction.highestBid, block.timestamp, auction.startTime, auction.endTime); // Emit an event indicating the auction has ended
     }
 
     // Function to automatically check and end all the time expiring auctions.

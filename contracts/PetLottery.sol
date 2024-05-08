@@ -19,7 +19,7 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
     address VRFCoordinator = 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B;
 
     // Variables to handle lottery mechanics
-    uint256 public lotteryFee = 10 wei;
+    uint256 public lotteryFee = 10000 wei;
     PetNFT public petNFTContract;
     mapping(uint256 => address) private requestToSender;
     mapping(uint256 => uint256) private requestToAmount;
@@ -98,7 +98,7 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
         }
 
         // Swap the pet at the selected position with a high-level pet
-        if (amount == 10 && !hasHighLevelPet) {
+        if (amount == 5 && !hasHighLevelPet) {
             uint256 swapIndex = uint256(keccak256(abi.encode(randomWords, randomWords[0]))) % 10;
             levels[swapIndex] = 2; // Start with level 2, check availability below
             hasHighLevelPet = true;
