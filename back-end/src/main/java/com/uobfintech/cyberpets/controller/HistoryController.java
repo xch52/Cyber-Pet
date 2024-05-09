@@ -16,7 +16,9 @@ import com.uobfintech.cyberpets.service.HistoryService;
 public class HistoryController {
     private HistoryService historyService;
 
-    public HistoryController(HistoryService historyService){this.historyService = historyService;}
+    public HistoryController(HistoryService historyService){
+        this.historyService = historyService;
+    }
 
     @GetMapping("lottery")
     public Result getLotteryHistoy(){

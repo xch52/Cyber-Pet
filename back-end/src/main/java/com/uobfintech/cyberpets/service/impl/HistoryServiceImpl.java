@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.mongodb.client.MongoCollection;
@@ -18,6 +19,7 @@ import com.uobfintech.cyberpets.service.HistoryService;
 
 @Service
 public class HistoryServiceImpl implements HistoryService {
+    @Autowired
     private MongoDAO mongoDAO;
 
     public List<LotteryHistory> findAllLotteryHistory() {
@@ -30,19 +32,18 @@ public class HistoryServiceImpl implements HistoryService {
                 Document doc = cursor.next();
                 documents.add(doc);
             }
-        } finally {
-            // 关闭Mongo客户端连接
-            mongoDAO.close();
         }
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
         for (Document doc : documents) {
-            LotteryHistory lotteryHistory = LotteryHistory.builder()
-                    .requester(doc.getString("requester"))
-                    .requestId(doc.getString("request_id"))
-                    .dateTime(ZonedDateTime.parse(doc.getString("datetime"), formatter))
-                    .amount(doc.getInteger("amount"))
-                    .tokenIds(doc.getList("token_ids", Integer.class)).build();
-            lotteryHistories.add(lotteryHistory);
+            if (doc.getString("datetime") != null) {
+                LotteryHistory lotteryHistory = LotteryHistory.builder()
+                        .requester(doc.getString("requester"))
+                        .requestId(doc.getString("request_id"))
+                        .dateTime(ZonedDateTime.parse(doc.getString("datetime"), formatter))
+                        .amount(doc.getInteger("amount"))
+                        .tokenIds(doc.getList("token_ids", Integer.class)).build();
+                lotteryHistories.add(lotteryHistory);
+            }
         }
         return lotteryHistories;
     }
@@ -57,9 +58,6 @@ public class HistoryServiceImpl implements HistoryService {
                 Document doc = cursor.next();
                 documents.add(doc);
             }
-        } finally {
-            // 关闭Mongo客户端连接
-            mongoDAO.close();
         }
         DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
         for (Document doc : documents) {

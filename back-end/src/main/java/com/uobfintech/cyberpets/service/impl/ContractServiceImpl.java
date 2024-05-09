@@ -18,6 +18,7 @@ import java.util.Objects;
 import org.bson.Document;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
@@ -27,17 +28,25 @@ import org.web3j.abi.datatypes.Event;
 import org.web3j.abi.datatypes.Function;
 import org.web3j.abi.datatypes.Type;
 import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
+import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.time.ZoneId;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
+import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.UpdateResult;
 import com.uobfintech.cyberpets.abi.PetAuction_abi;
@@ -365,14 +374,31 @@ public class ContractServiceImpl implements ContractService {
         System.out.println("handling Lottery Requested..........");
         LotteryRequestedEventResponse lotteryRequestedEventResponse = getLotteryRequestedEventFromLog(log);
         MongoCollection<Document> collection = mongoDAO.getCollection("lottery_history");
+        Document query = new Document("request_id", String.valueOf(lotteryRequestedEventResponse.requestId));
+        long count = collection.countDocuments(query);
+        if (count == 0){
+            Document document = new Document("requester", lotteryRequestedEventResponse.requester)
+                    .append("request_id", String.valueOf(lotteryRequestedEventResponse.requestId))
+                    .append("amount", lotteryRequestedEventResponse.amount.intValue());
+            collection.insertOne(document);
+        }
 
-        Document document = new Document("requester", lotteryRequestedEventResponse.requester)
-                .append("request_id", String.valueOf(lotteryRequestedEventResponse.requestId))
-                .append("amount", lotteryRequestedEventResponse.amount.intValue());
+//        // 构建查询条件
+//        Document query = new Document("requester", lotteryRequestedEventResponse.requester)
+//                .append("requestId", lotteryRequestedEventResponse.requestId);
+//
+//        // 检查是否已存在相同的token_id和end_time组合
+//        try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
+//            if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
+//                Document document = new Document("requester", lotteryRequestedEventResponse.requester)
+//                        .append("request_id", String.valueOf(lotteryRequestedEventResponse.requestId))
+//                        .append("amount", lotteryRequestedEventResponse.amount.intValue());
+//                collection.insertOne(document);
+//            } else {
+//                System.out.println("Document with same token_id and end_time already exists.");
+//            }
+//        }
 
-
-        // 插入文档到集合
-        collection.insertOne(document);
 
         System.out.println("requester: "+ lotteryRequestedEventResponse.requester + ", request id: "
                 + lotteryRequestedEventResponse.requestId + ", amount: "+ lotteryRequestedEventResponse.amount);
@@ -523,24 +549,50 @@ public class ContractServiceImpl implements ContractService {
         PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse =  getAuctionEndedEventFromLog(log);
         for (Auction auction : auctionList) {
 
-            if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId) &&
+            if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId.intValue()) &&
                     Objects.equals(auction.getTimestamp(), auctionEndedEventResponse.CreatedEndTime)) {
                 auction.setHighestBidder(auctionEndedEventResponse.winner);
                 BigDecimal highestBid = weiToEther(auctionEndedEventResponse.amount);
                 auction.setHighestBid(Double.valueOf(String.valueOf(highestBid)));
 
                 MongoCollection<Document> collection = mongoDAO.getCollection("auction_history");
-                Document document = new Document("token_id", auction.getTokenId())
-                        .append("seller", auction.getSeller())
-                        .append("start_time", String.valueOf(auction.getStartTime()))
-                        .append("end_time", String.valueOf(auction.getEndTime()))
-                        .append("timestamp", String.valueOf(auction.getTimestamp()))
-                        .append("highest_bid", Double.valueOf(String.valueOf(auction.getHighestBid())))
-                        .append("highest_bidder", auction.getHighestBidder())
-                        .append("reserve_price", auction.getReservePrice());
-                // 插入文档到集合
-                collection.insertOne(document);
-                System.out.println(auction);
+
+
+                // 构建查询条件
+                Document query = new Document("token_id", auction.getTokenId())
+                        .append("end_time", String.valueOf(auction.getEndTime()));
+
+                // 检查是否已存在相同的token_id和end_time组合
+                try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
+                    if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
+                        Document document = new Document("token_id", auction.getTokenId())
+                                .append("seller", auction.getSeller())
+                                .append("start_time", String.valueOf(auction.getStartTime()))
+                                .append("end_time", String.valueOf(auction.getEndTime()))
+                                .append("timestamp", String.valueOf(auction.getTimestamp()))
+                                .append("highest_bid", Double.valueOf(String.valueOf(auction.getHighestBid())))
+                                .append("highest_bidder", auction.getHighestBidder())
+                                .append("reserve_price", auction.getReservePrice());
+                        collection.insertOne(document);
+                        System.out.println(auction);
+                    } else {
+                        System.out.println("Document with same token_id and end_time already exists.");
+                    }
+                }
+//                // 创建一个复合唯一索引
+//                IndexOptions indexOptions = new IndexOptions().unique(true);
+//                collection.createIndex(Indexes.ascending("token_id", "end_time"), indexOptions);
+//                Document document = new Document("token_id", auction.getTokenId())
+//                        .append("seller", auction.getSeller())
+//                        .append("start_time", String.valueOf(auction.getStartTime()))
+//                        .append("end_time", String.valueOf(auction.getEndTime()))
+//                        .append("timestamp", String.valueOf(auction.getTimestamp()))
+//                        .append("highest_bid", Double.valueOf(String.valueOf(auction.getHighestBid())))
+//                        .append("highest_bidder", auction.getHighestBidder())
+//                        .append("reserve_price", auction.getReservePrice());
+//                // 插入文档到集合
+//                collection.insertOne(document);
+
             }
         }
 

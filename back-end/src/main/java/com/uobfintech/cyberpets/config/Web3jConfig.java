@@ -18,7 +18,7 @@ public class Web3jConfig {
 
     @Bean
     public String contractAddressLottery() {
-        return "0xCCe5c7e98a79B47E9740D76A61c093667d8dAfAB"; // 合约地址
+        return "0xBb7c5eAE9D7BB56539149cd0C84f52584c7A66D6"; // 合约地址
     }
 
     @Bean
