@@ -8,20 +8,20 @@ import { ethers } from 'ethers';
 import { useWeb3 } from '../Web3Context';
 
 
-export default function SellCard({ tokenId, image, title, petclass, attribute, description, price, orignPrice, states, deadline, alt, web3 }) {
+export default function SellCard({ tokenId, image, title, petclass, attribute, description, price, orignPrice, states, alt, web3 }) {
 
     // 定义各种状态变量
-    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
+    // const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
     const [open, setOpen] = useState(false);
     const { petMarket } = useWeb3();
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTimeLeft(calculateTimeLeft(deadline));
-        }, 1000);
+    // useEffect(() => {
+    //     const interval = setInterval(() => {
+    //         setTimeLeft(calculateTimeLeft(deadline));
+    //     }, 1000);
 
-        return () => clearInterval(interval);
-    }, [deadline]);
+    //     return () => clearInterval(interval);
+    // }, [deadline]);
 
     // 计算拍卖到期时间
     function calculateTimeLeft(endTime) {
@@ -113,7 +113,7 @@ export default function SellCard({ tokenId, image, title, petclass, attribute, d
                         <Typography variant="h6" color="text.secondary" component="div">
                             {showStars(petclass)}
                         </Typography>
-                        {timeLeft.timeOut ? ( // 检查是否超时
+                        {/* {timeLeft.timeOut ? ( // 检查是否超时
                             <Typography variant="subtitle2" color="error" style={{ marginLeft: '0.5rem' }}>
                                 Time Out
                             </Typography>
@@ -121,7 +121,7 @@ export default function SellCard({ tokenId, image, title, petclass, attribute, d
                             <Typography variant="subtitle2" color="green" style={{ marginLeft: '0.5rem' }}>
                                 {`  ${timeLeft.days}d ${timeLeft.hours}h ${timeLeft.minutes}m ${timeLeft.seconds}s`}
                             </Typography>
-                        )}
+                        )} */}
                     </div>
                     <Typography variant="body2" color="text.secondary">
                         {description}

@@ -15,7 +15,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { useEffect, useState } from 'react';
-import { useWeb3 } from '../Web3Context'; 
+import { useWeb3 } from '../Web3Context';
 
 
 function Copyright(props) {
@@ -37,7 +37,7 @@ const defaultTheme = createTheme();
 
 export default function SellWindows({ petsId }) {
 
-  const { petNFT, petAuction, web3, account } = useWeb3()
+  const { petNFT, petAuction, petMarket, web3, account } = useWeb3()
   const [price, setPrice] = React.useState('');
   const [duration, setDuration] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -49,20 +49,15 @@ export default function SellWindows({ petsId }) {
   const isFormFilled = price && duration && isCheckboxChecked;
 
   const petApprove = async () => {
-    if (!petNFT ||!petAuction || !account) {
-      alert('Please connect your wallet and ensure the auction contract is loaded.');
+    if (!petNFT || (!petAuction && !petMarket) || !account) {
+      alert('Please connect your wallet and ensure the contracts are loaded.');
       return;
     }
 
-    const priceWei = web3.utils.toWei(price, 'ether');
-    const durationSeconds = parseInt(duration) * 60;
-    console.log("Account: ", account);
-    console.log("tokenId: ", petsId);
-
-
     try {
-      const tx = await petNFT.methods.approve(petAuction.options.address, petsId).send({ from: account });
-      console.log('NFT has been approved to auction contract');
+      let contractAddress = saleType === 'auction' ? petAuction.options.address : petMarket.options.address; // 选择合适的合约地址
+      const tx = await petNFT.methods.approve(contractAddress, petsId).send({ from: account });
+      console.log(`NFT has been approved to ${saleType === 'auction' ? 'auction' : 'market'} contract`);
       return tx;
     } catch (error) {
       console.error('Error approving NFT:', error);
@@ -73,11 +68,11 @@ export default function SellWindows({ petsId }) {
 
   const clickSubmit = async (event) => {
     event.preventDefault();
-    if (!petAuction || !account) {
+    if (!web3 || !account || !petMarket) {
       alert('Please connect your wallet first.');
       return;
     }
-    
+
     try {
       await petApprove();  // Ensure NFT is approved before transaction
     } catch (error) {
@@ -87,17 +82,17 @@ export default function SellWindows({ petsId }) {
     }
 
     const priceWei = web3.utils.toWei(price, 'ether');
-    const durationSeconds = parseInt(duration) * 60;
+    const durationSeconds = parseInt(duration); // Convert duration to seconds
     console.log("account: ", account);
 
-    
+
     try {
       if (saleType === 'auction') {
         await petAuction.methods.createAuction(petsId, priceWei, durationSeconds).send({ from: account });
-        alert('Auction created successfully!');
+        alert('Auction transaction create successfully!');
       } else if (saleType === 'normal') {
-        await petAuction.methods.listPetForSale(petsId, priceWei).send({ from: account });
-        alert('Pet listed for sale successfully!');
+        await petMarket.methods.listPetForSale(petsId, priceWei).send({ from: account });
+        alert('Normal transaction create successfully!');
       }
     } catch (error) {
       console.error('Error creating transaction:', error);
@@ -172,38 +167,27 @@ export default function SellWindows({ petsId }) {
                 />
               </Grid>
               <Grid item xs={6}>
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  id="duration"
-                  label="Duration (S)"
-                  name="duration"
-                  autoComplete="duration"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                />
+                {saleType === 'auction' && (
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="duration"
+                    label="Duration (Seconds)"
+                    name="duration"
+                    autoComplete="duration"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  />
+                )}
               </Grid>
             </Grid>
 
-            {/* 描述输入框 */}
-            {/* <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="description"
-              label="Description"
-              type="description"
-              id="description"
-              autoComplete="current-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            /> */}
 
             {/* 承诺勾选框 */}
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" checked={isCheckboxChecked} 
-              onChange={(e) => setIsCheckboxChecked(e.target.checked)} />}
+              control={<Checkbox value="remember" color="primary" checked={isCheckboxChecked}
+                onChange={(e) => setIsCheckboxChecked(e.target.checked)} />}
               label="I've known the rules in the market."
             />
 
@@ -213,7 +197,7 @@ export default function SellWindows({ petsId }) {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
-              disabled={!isFormFilled}
+              disabled={!price || !isCheckboxChecked || (saleType === 'auction' && !duration)} 
             >
               Create Transaction
             </Button>

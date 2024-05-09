@@ -14,7 +14,7 @@ import HomeExample2 from '../assets/HomeExample2.jpg';
 import Lottery from '../components/Lottery';
 import { makeStyles } from '@mui/styles';
 import { useEffect, useState } from 'react';
-import { useWeb3 } from '../Web3Context'; 
+import { useWeb3 } from '../Web3Context';
 import GaExample1 from '../assets/GaExample1.jpg';
 // Image Source: https://lexica.art/prompt/b946a95c-e12e-4e8a-a92f-e3969d6e68fd
 import GaExample2 from '../assets/GaExample2.jpg'
@@ -51,7 +51,7 @@ const products = [
     title: "Adventure Cat",
     attributes: ['happy', 'sad'],
     description: "This is a professional cat who loves adventure.",
-    history:[],
+    history: [],
     price: 3.5,
     states: '1',
     alt: "Product 1",
@@ -157,29 +157,26 @@ export default function GashPage() {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('http://44.202.121.86:9000/api/pets/1'); // 你的API端点
+        const response = await fetch('http://13.40.175.75:9000/api/pets/all');
         const json = await response.json();
-  
+
         if (json.code === 1 && json.msg === "success") {
-          const productData = json.data;
-          const newProduct = {
-            id: productData.id,
-            image: productData.imageUrl, // 从服务器获取图片URL
-            title: productData.title,
-            attributes: productData.attributes, // 直接使用从服务器获得的属性
-            description: "This is a professional cat who loves adventure.", // 你可以根据需要从服务器获取或使用静态描述
-            history: productData.history || [], // 使用从服务器获得的历史，或在无数据时使用空数组
-            price: productData.price,
-            states: productData.states,
-            alt: "Product " + productData.id // 或任何其他适当的替代文本
-          };
-          setProducts([newProduct]); // 这将设置产品数组为包含单一产品的数组，或者你可以添加到现有数组中
-          console.log(json.data);
+          setProducts(json.data.map(item => ({
+            id: item.id,
+            title: item.title,
+            image: item.imageUrl,
+            description: item.description,
+            price: item.marketPrice || 'N/A',  // Assuming 'marketPrice' is the current price to display
+            attributes: item.attributes.join(', '),  // Joining attributes array to a string for display
+            petclass: item.petclass,
+            lotteryHistory: item.lotteryHistory,
+            alt: `Product ${item.id}`
+          })));
         } else {
-          console.error('Server response not successful:', json.msg);
+          console.error('Failed to fetch data:', json.msg);
         }
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
@@ -195,7 +192,7 @@ export default function GashPage() {
 
         <Box sx={{ overflowX: 'auto' }}>
           <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)' }} cols={products.length} rowHeight={300}>
-            {products.map((product) => (
+            {products.filter(product => product.lotteryHistory == null).map((product) => (
               <ImageListItem key={product.id}>
                 <img
                   src={product.image}

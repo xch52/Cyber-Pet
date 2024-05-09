@@ -1,3 +1,4 @@
+
 [
 	{
 		"inputs": [
@@ -166,6 +167,11 @@
 					},
 					{
 						"internalType": "string",
+						"name": "url",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
 						"name": "uri",
 						"type": "string"
 					}
@@ -180,7 +186,7 @@
 	},
 	{
 		"inputs": [],
-		"name": "listActiveSales",
+		"name": "listActiveSalesInfo",
 		"outputs": [
 			{
 				"internalType": "uint256[]",
@@ -206,6 +212,48 @@
 					}
 				],
 				"internalType": "struct PetMarket.Sale[]",
+				"name": "",
+				"type": "tuple[]"
+			},
+			{
+				"components": [
+					{
+						"internalType": "uint256",
+						"name": "level",
+						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "name",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "appearance",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "character",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "description",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "url",
+						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
+					}
+				],
+				"internalType": "struct PetNFT.PetAttributes[]",
 				"name": "",
 				"type": "tuple[]"
 			}

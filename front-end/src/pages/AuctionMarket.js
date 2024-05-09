@@ -134,6 +134,7 @@ export default function AuctionMarket() {
   // 获取正在拍卖的宠物信息
   useEffect(() => {
     
+    
     const fetchAuctions = async () => {
       if (!petAuction || !web3 || !petNFT) {
         console.log("Waiting for initialization...");
@@ -157,7 +158,7 @@ export default function AuctionMarket() {
           //const [tokenIds, auctionsBrief, petsBrief] = data;
           const newProducts = tokenIds.map((tokenId, index) => ({
             id: tokenId.toString(),
-            image: `https://ipfs.io/ipfs/${petsBrief[index].uri}`,
+            image: petsBrief[index].url,
             title: petsBrief[index].name,
             petclass: petsBrief[index].level.toString(),
             attribute: [petsBrief[index].appearance + ', ' + petsBrief[index].character] ,

@@ -51,29 +51,40 @@ export default function PortPage() {
     const fetchPets = async () => {
       if (petNFT && account) {
         try {
-          const pets = await petNFT.methods.getMyPets().call({ from: account });
-          console.log("tokenId is!! :",  pets)
-           // 调用getMyPets获取宠物信息
-          const formattedPets = pets.map(pet => ({
-            id: pet.tokenId,
-            image: `https://ipfs.io/ipfs/${pet.uri}`,
-            title: pet.name,
-            petclass: pet.level.toString(),
-            attribute: [pet.appearance, pet.character],
-            description: pet.description,
-            price: `Level ${pet.level}`,
-            alt: `Pet ${pet.name}`,
-          }));
+          const result = await petNFT.methods.getMyPets().call({ from: account });
+          const tokenIds = result[0];
+          const petsAttributes = result[1];
+  
+          // Check if the received data is structured as expected
+          if (!Array.isArray(tokenIds) || !Array.isArray(petsAttributes)) {
+            console.error("Received data is not in expected array format:", result);
+            return;
+          }
+  
+          // Map over the tokenIds and use the index to access attributes in petsAttributes
+          const formattedPets = tokenIds.map((tokenId, index) => {
+            const pet = petsAttributes[index];
+            return {
+              id: tokenId.toString(),
+              image: pet.url,
+              title: pet.name,
+              petclass: pet.level.toString(),
+              attribute: [pet.appearance, pet.character],
+              description: pet.description,
+              price: `Level ${pet.level}`,
+              alt: `Pet ${pet.name}`,
+            };
+          });
+  
           setProducts(formattedPets);
-          console.log("tokenId is? :",  pets)
         } catch (error) {
           console.error("Failed to fetch pets:", error);
         }
       }
     };
-
+  
     fetchPets();
-  }, [petNFT, account]);
+  }, [petNFT, account]); 
 
 
   return (
