@@ -3,6 +3,7 @@ package com.uobfintech.cyberpets.abi;
 import io.reactivex.Flowable;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -196,7 +197,15 @@ public class PetLottery_abi extends Contract {
         typedResponse.log = log;
         typedResponse.requester = (String) eventValues.getIndexedValues().get(0).getValue();
         typedResponse.requestId = (BigInteger) eventValues.getNonIndexedValues().get(0) .getValue();
-        typedResponse.tokenIds = (List<BigInteger>) ((Array) eventValues.getNonIndexedValues().get(1)).getValue();
+
+        typedResponse.tokenIds = new ArrayList<>();
+        DynamicArray<?> dynamicArray = (DynamicArray<?>) eventValues.getNonIndexedValues().get(1);
+        for (Object tokenId : dynamicArray.getValue()) {
+            if (tokenId instanceof Uint256) {
+                BigInteger value = ((Uint256) tokenId).getValue();
+                typedResponse.tokenIds.add(value);
+            }
+        }
         typedResponse.timestamp = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
         return typedResponse;
     }

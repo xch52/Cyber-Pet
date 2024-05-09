@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
+import com.uobfintech.cyberpets.entity.History;
 import com.uobfintech.cyberpets.entity.Pet;
 import com.uobfintech.cyberpets.repository.MongoDAO;
 import com.uobfintech.cyberpets.service.MetadataService;
@@ -49,6 +50,7 @@ public class MetadataServiceImpl implements MetadataService {
         String description = doc.getString("description");
         List<Double> prebid = doc.getList("prebid", Double.class);
         String owner = doc.getString("owner");
+        List<History> historyList = doc.getList("history", History.class);
 
 
 
@@ -83,6 +85,7 @@ public class MetadataServiceImpl implements MetadataService {
                 .petclass(petclass)
                 .description(description)
                 .owner(owner)
+                .history(historyList)
                 .build();
     }
 

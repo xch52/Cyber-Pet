@@ -10,12 +10,15 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 import org.bson.Document;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -84,6 +87,9 @@ public class ContractServiceImpl implements ContractService {
     // @Autowired
     private MongoDAO mongoDAO;
 
+    @Autowired
+    private TaskScheduler taskScheduler;
+
     // Assume a very low gas price since it's a read operation.
 
     private final static BigInteger WEI_IN_ETHER = new BigInteger("1000000000000000000"); // 10^18
@@ -145,6 +151,37 @@ public class ContractServiceImpl implements ContractService {
 
         // 将秒数转换为BigInteger
         return BigInteger.valueOf(seconds);
+    }
+
+    @Async
+    public void callAuctionEndedFunc(BigInteger tokenId) {
+        try {
+            Credentials credentials = Credentials.create("b67d61efaab1a9d65a53221c8cfbd89d38c72d6ff0ed40b8e4e4a56af607cb0b");
+            PetAuction_abi petAuctionAbi = new PetAuction_abi(contractAddressAuction, web3j, credentials, new DefaultGasProvider());
+            RemoteFunctionCall<TransactionReceipt> remoteFunctionCall = petAuctionAbi.endAuction(tokenId);
+
+            try {
+                TransactionReceipt result = remoteFunctionCall.send();
+                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
+
+                System.out.println("Contract returned: " + result);
+                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
+
+
+                String transactionHash = result.getTransactionHash();
+                EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionHash).send();
+                if (receipt.getTransactionReceipt().isPresent()) {
+                    System.out.println("Transaction " + transactionHash + " was included in block " + receipt.getTransactionReceipt().get().getBlockNumber());
+                } else {
+                    System.out.println("Transaction is still pending...");
+                }
+            } catch (Exception e) {
+                System.err.println("Transaction failed: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            System.err.println("Error during contract function call: " + e.getMessage());
+        }
     }
 
 
@@ -411,8 +448,10 @@ public class ContractServiceImpl implements ContractService {
         PetLottery_abi.LotteryFulfilledEventResponse lotteryFulfilledEventResponse = getLotteryFulfilledEventFromLog(log);
 
         List<Integer> tokenIds = new ArrayList<>();
-        for (BigInteger tokenid : lotteryFulfilledEventResponse.tokenIds) {
-            tokenIds.add(tokenid.intValue());
+
+        for (BigInteger tokenId : lotteryFulfilledEventResponse.tokenIds) {
+            // 将BigInteger转换为int值并添加到列表中
+            tokenIds.add(tokenId.intValue());
         }
         ZonedDateTime datetime = convertToZonedDateTimeUTCPlusOne(lotteryFulfilledEventResponse.timestamp);
 
@@ -525,6 +564,20 @@ public class ContractServiceImpl implements ContractService {
         auction.setReservePrice(Double.valueOf(String.valueOf(reservePrice)));
         auctionList.add(auction);
         System.out.println(auction);
+
+        // 转换为long
+        long timestamp = auctionCreatedEventResponse.endTime.longValue();
+
+        // 使用java.util.Date
+        Date date = new Date(timestamp * 1000L);
+        Date now = new Date();  // 获取当前时间
+
+        // 检查是否应该调度任务
+        if (date.after(now)) {  // 如果date是将来的时间
+            taskScheduler.schedule(() -> callAuctionEndedFunc(auctionCreatedEventResponse.tokenId), date);
+        } else {
+            System.out.println("The task is not scheduled because the set time has passed.");
+        }
     }
 
     private void handleBidPlacedEvent(Log log) {
