@@ -5,22 +5,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LotteryHistory {
-    private String requester;
+public class HistoyDTO {
+    private String buyerId;
 
-    private String requestId;
+    private String sellerId;
 
-    private ZonedDateTime dateTime;
+    private String dateTime;
 
-    private Integer amount;
+    private Double price;
 
-    private List<Integer> tokenIds;
+    private String type;
+
 }

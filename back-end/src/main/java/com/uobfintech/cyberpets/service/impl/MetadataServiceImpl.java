@@ -29,19 +29,21 @@ public class MetadataServiceImpl implements MetadataService {
         Integer id = doc.getInteger("id");
         String title = doc.getString("title");
         String imageUrl = doc.getString("image");
+        String jsonUri = doc.getString("json_uri");
 
         // Document attributesDoc = (Document) doc.get("attributes");
 
 
         List<String> attributes = new ArrayList<>();
-        if (doc.containsKey("attribute")) {
+        if (doc.containsKey("attributes")) {
             // 确保字段确实是一个列表
-            attributes = doc.getList("attribute", String.class);
+            attributes = doc.getList("attributes", String.class);
         } else {
             System.out.println("No interests found or wrong data type.");
         }
 
-        Double price = doc.getDouble("price");
+        Double auctionPrice = doc.getDouble("auction_price");
+        Double marketPrice = doc.getDouble("market_price");
         String states = doc.getString("states");
         String petclass = doc.getString("petclass");
         String description = doc.getString("description");
@@ -72,9 +74,11 @@ public class MetadataServiceImpl implements MetadataService {
                 .id(id)
                 .title(title)
                 .imageUrl(imageUrl)
+                .jsonUri(jsonUri)
                 .prebid(prebid)
                 .attributes(attributes)
-                .price(price)
+                .auctionPrice(auctionPrice)
+                .marketPrice(marketPrice)
                 .states(states)
                 .petclass(petclass)
                 .description(description)

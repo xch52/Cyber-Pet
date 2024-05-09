@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 
@@ -14,7 +15,7 @@ import java.time.ZonedDateTime;
 @AllArgsConstructor
 public class Auction {
 
-    public BigInteger tokenId;
+    public Integer tokenId;
 
     public String seller;
 
@@ -24,9 +25,9 @@ public class Auction {
 
     public BigInteger timestamp;
 
-    public BigInteger highestBid;
+    public Double highestBid;
 
     public String highestBidder;
 
-    public BigInteger reservePrice;
+    public Double reservePrice;
 }

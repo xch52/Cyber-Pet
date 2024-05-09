@@ -7,6 +7,9 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -30,6 +33,7 @@ public class MongoDAO {
         MongoClientSettings settings = MongoClientSettings.builder()
                 .applyConnectionString(new ConnectionString(connectionString))
                 .serverApi(serverApi)
+                .codecRegistry(pojoCodecRegistry)
                 .build();
         mongoClient = MongoClients.create(settings);
         database = mongoClient.getDatabase(databaseName);
@@ -48,6 +52,21 @@ public class MongoDAO {
     public void close() {
         mongoClient.close();
     }
+
+    PojoCodecProvider codecProvider = PojoCodecProvider.builder()
+            .register("com.uobfintech.cyberpets.entity")
+            .build();
+
+    CodecRegistry pojoCodecRegistry = CodecRegistries.fromRegistries(
+            MongoClientSettings.getDefaultCodecRegistry(),
+            CodecRegistries.fromProviders(codecProvider)
+    );
+
+    CodecRegistry codecRegistry = CodecRegistries.fromRegistries(
+            MongoClientSettings.getDefaultCodecRegistry(),
+            CodecRegistries.fromCodecs(new ZonedDateTimeCodec())
+    );
+
 
 
 

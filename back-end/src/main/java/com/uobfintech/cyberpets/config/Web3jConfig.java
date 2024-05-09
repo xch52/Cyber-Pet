@@ -18,22 +18,22 @@ public class Web3jConfig {
 
     @Bean
     public String contractAddressLottery() {
-        return "0x134B34D990Cad0bAcac1d22CFACD0ac4Ce2aae20"; // 合约地址
+        return "0xCCe5c7e98a79B47E9740D76A61c093667d8dAfAB"; // 合约地址
     }
 
     @Bean
     public String contractAddressAuction() {
-        return "0xa1e4d04A6da31a157532E426954D025d14Ebe171"; // 合约地址
+        return "0xa236D20C0959bc699CD6257B286d0612Ce7D2Dc0"; // 合约地址
     }
 
     @Bean
     public String contractAddressMarket() {
-        return "0x486717C03b19Df4CF1db10338b14793DBbF16AAA"; // 合约地址
+        return "0xdc1784d6720c5f401e9c93D4b80274Bf9ecD39Ac"; // 合约地址
     }
 
     @Bean
     public String contractAddressNFT() {
-        return "0x1096324F09f566eC168C0630CeF649cC7a4578d2"; // 合约地址
+        return "0x6E9b5e45D65fE501eda45E16aBbCe5919814946f"; // 合约地址
     }
 
 

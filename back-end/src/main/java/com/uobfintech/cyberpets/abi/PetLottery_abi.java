@@ -75,7 +75,7 @@ public class PetLottery_abi extends Contract {
     ;
 
     public static final Event LOTTERYFULFILLED_EVENT = new Event("LotteryFulfilled", 
-            Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<DynamicArray<Uint256>>() {}, new TypeReference<Uint256>() {}));
+            Arrays.<TypeReference<?>>asList(new TypeReference<Address>(true) {}, new TypeReference<Uint256>() {}, new TypeReference<DynamicArray<Uint256>>() {}, new TypeReference<Uint256>() {}));
     ;
 
     public static final Event LOTTERYREQUESTED_EVENT = new Event("LotteryRequested", 
@@ -195,8 +195,9 @@ public class PetLottery_abi extends Contract {
         LotteryFulfilledEventResponse typedResponse = new LotteryFulfilledEventResponse();
         typedResponse.log = log;
         typedResponse.requester = (String) eventValues.getIndexedValues().get(0).getValue();
-        typedResponse.tokenIds = (List<BigInteger>) ((Array) eventValues.getNonIndexedValues().get(0)).getValue();
-        typedResponse.timestamp = (BigInteger) eventValues.getNonIndexedValues().get(1).getValue();
+        typedResponse.requestId = (BigInteger) eventValues.getNonIndexedValues().get(0) .getValue();
+        typedResponse.tokenIds = (List<BigInteger>) ((Array) eventValues.getNonIndexedValues().get(1)).getValue();
+        typedResponse.timestamp = (BigInteger) eventValues.getNonIndexedValues().get(2).getValue();
         return typedResponse;
     }
 
@@ -496,6 +497,8 @@ public class PetLottery_abi extends Contract {
 
     public static class LotteryFulfilledEventResponse extends BaseEventResponse {
         public String requester;
+
+        public BigInteger requestId;
 
         public List<BigInteger> tokenIds;
 

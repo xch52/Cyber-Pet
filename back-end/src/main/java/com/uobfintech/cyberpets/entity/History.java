@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Builder
@@ -22,4 +23,11 @@ public class History {
 
     private String type;
 
+    public String getFormattedDateTime() {
+        return dateTime.format(DateTimeFormatter.ISO_ZONED_DATE_TIME);
+    }
+
+    public void setFormattedDateTime(String dateTime) {
+        this.dateTime = ZonedDateTime.parse(dateTime, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+    }
 }

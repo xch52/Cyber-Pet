@@ -23,6 +23,8 @@ public class Pet {
 
     private String imageUrl;
 
+    private String jsonUri;
+
     private String petclass;
 
     private List<String> attributes;
@@ -35,7 +37,9 @@ public class Pet {
 
     private List<LotteryHistory> lotteryHistory;
 
-    private Double price;
+    private Double auctionPrice;
+
+    private Double marketPrice;
 
     private String states;
 
