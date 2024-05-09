@@ -2,20 +2,31 @@ package com.uobfintech.cyberpets.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
+
+import com.google.gson.Gson;
 
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.uobfintech.cyberpets.entity.History;
+import com.uobfintech.cyberpets.entity.HistoyDTO;
+import com.uobfintech.cyberpets.entity.LotteryDatetime;
+import com.uobfintech.cyberpets.entity.LotteryHistory;
 import com.uobfintech.cyberpets.entity.Pet;
 import com.uobfintech.cyberpets.repository.MongoDAO;
+import com.uobfintech.cyberpets.service.HistoryService;
 import com.uobfintech.cyberpets.service.MetadataService;
+import com.uobfintech.cyberpets.entity.HistoyDTO;
 
 @Service
 @Slf4j
@@ -34,7 +45,7 @@ public class MetadataServiceImpl implements MetadataService {
 
         // Document attributesDoc = (Document) doc.get("attributes");
 
-
+        List<History> historyList = new ArrayList<>();
         List<String> attributes = new ArrayList<>();
         if (doc.containsKey("attributes")) {
             // 确保字段确实是一个列表
@@ -50,8 +61,136 @@ public class MetadataServiceImpl implements MetadataService {
         String description = doc.getString("description");
         List<Double> prebid = doc.getList("prebid", Double.class);
         String owner = doc.getString("owner");
-        List<History> historyList = doc.getList("history", History.class);
+        List<LotteryDatetime> lotteryDatetimeList = new ArrayList<>();
+        if (doc.getList("lottery_hisotory", String.class) != null){
+            List<String> lottery_s = doc.getList("lottery_hisotory", String.class);
+        }
 
+        System.out.println("lotteryHistory: "+doc.getList("lottery_history", String.class));
+        //List<Document> history = (List<Document>) doc.get("history");
+        // 假设 'doc' 是你从数据库查询到的 Document 对象
+
+        if (doc.get("history")!=null && doc.getList("lottery_history", String.class) == null){
+
+
+            List<Map> rawHistoryList = doc.getList("history", Map.class);  // 获取原始数据列表
+            for (Map map:rawHistoryList){
+                History history1 = new History();
+                history1.setBuyerId((String) map.get("buyerId"));
+                history1.setDateTime(ZonedDateTime.parse(String.valueOf(map.get("dateTime"))));
+                history1.setSellerId((String) map.get("sellerId"));
+                history1.setPrice((Double) map.get("price"));
+                history1.setType(String.valueOf(map.get("type")));
+                historyList.add(history1);
+            }
+
+
+            // List<History> historyList = History.convertToListOfHistory(rawHistoryList);
+
+
+//            String jsonHistory = doc.get("history").toString();
+//
+//            Gson gson = new Gson();
+//            Type historyListType = new TypeToken<List<History>>(){}.getType();
+            // List<HistoyDTO> historyDTOList = gson.fromJson(jsonHistory, historyListType);
+
+//            for (HistoyDTO dto: historyDTOList){
+//                historyList.add(new History(dto.getBuyerId(), dto.getSellerId(), ZonedDateTime.parse(dto.getDateTime()), dto.getPrice(), dto.getType()));
+//            }
+            return Pet.builder()
+                    .id(id)
+                    .title(title)
+                    .imageUrl(imageUrl)
+                    .jsonUri(jsonUri)
+                    .prebid(prebid)
+                    .attributes(attributes)
+                    .auctionPrice(auctionPrice)
+                    .marketPrice(marketPrice)
+                    .states(states)
+                    .petclass(petclass)
+                    .description(description)
+                    .owner(owner)
+                    .history(historyList)
+                    .build();
+        } else if (doc.get("history")!=null && doc.getList("lottery_history", String.class) != null){
+            List<String> lottery_s = doc.getList("lottery_history", String.class);
+            for (String s : lottery_s){
+                LotteryDatetime lotteryDatetime = LotteryDatetime.builder().dateTime(
+                        ZonedDateTime.parse(s)
+                ).build();
+                lotteryDatetimeList.add(lotteryDatetime);
+            }
+
+            List<Map> rawHistoryList = doc.getList("history", Map.class);  // 获取原始数据列表
+            for (Map map:rawHistoryList){
+                History history1 = new History();
+                history1.setBuyerId((String) map.get("buyerId"));
+                history1.setDateTime(ZonedDateTime.parse(String.valueOf(map.get("dateTime"))));
+                history1.setSellerId((String) map.get("sellerId"));
+                history1.setPrice((Double) map.get("price"));
+                history1.setType(String.valueOf(map.get("type")));
+                historyList.add(history1);
+            }
+            return Pet.builder()
+                    .id(id)
+                    .title(title)
+                    .imageUrl(imageUrl)
+                    .jsonUri(jsonUri)
+                    .prebid(prebid)
+                    .attributes(attributes)
+                    .auctionPrice(auctionPrice)
+                    .marketPrice(marketPrice)
+                    .states(states)
+                    .petclass(petclass)
+                    .description(description)
+                    .owner(owner)
+                    .history(historyList)
+                    .lotteryDatetime(lotteryDatetimeList)
+                    .build();
+        }else if (doc.get("history")==null && doc.getList("lottery_history", String.class) != null){
+            List<String> lottery_s = doc.getList("lottery_history", String.class);
+            for (String s : lottery_s){
+                LotteryDatetime lotteryDatetime = LotteryDatetime.builder().dateTime(
+                        ZonedDateTime.parse(s)
+                ).build();
+                lotteryDatetimeList.add(lotteryDatetime);
+            }
+            return Pet.builder()
+                    .id(id)
+                    .title(title)
+                    .imageUrl(imageUrl)
+                    .jsonUri(jsonUri)
+                    .prebid(prebid)
+                    .attributes(attributes)
+                    .auctionPrice(auctionPrice)
+                    .marketPrice(marketPrice)
+                    .states(states)
+                    .petclass(petclass)
+                    .description(description)
+                    .owner(owner)
+                    .lotteryDatetime(lotteryDatetimeList)
+                    .build();
+        } else {
+            return Pet.builder()
+                    .id(id)
+                    .title(title)
+                    .imageUrl(imageUrl)
+                    .jsonUri(jsonUri)
+                    .prebid(prebid)
+                    .attributes(attributes)
+                    .auctionPrice(auctionPrice)
+                    .marketPrice(marketPrice)
+                    .states(states)
+                    .petclass(petclass)
+                    .description(description)
+                    .owner(owner)
+                    .build();
+        }
+//        List<History> historyList = new ArrayList<>();
+//        List<Object> rawHistoryList = doc.getList("history", Object.class);  // 获取原始数据列表
+//        for (Object raw : rawHistoryList){
+//            historyList.add((History) raw);
+//        }
 
 
 //        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -72,21 +211,7 @@ public class MetadataServiceImpl implements MetadataService {
 //                System.err.println("Failed to parse the date: " + e.getMessage());
 //            }
 //        }
-        return Pet.builder()
-                .id(id)
-                .title(title)
-                .imageUrl(imageUrl)
-                .jsonUri(jsonUri)
-                .prebid(prebid)
-                .attributes(attributes)
-                .auctionPrice(auctionPrice)
-                .marketPrice(marketPrice)
-                .states(states)
-                .petclass(petclass)
-                .description(description)
-                .owner(owner)
-                .history(historyList)
-                .build();
+
     }
 
     public Pet findPetById(Long id) {

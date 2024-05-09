@@ -490,6 +490,7 @@ public class ContractServiceImpl implements ContractService {
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         BigDecimal price = weiToEther(petListedEventResponse.price);
         History history = History.builder()
+                .tokenId(petListedEventResponse.tokenId.intValue())
                         .sellerId(petListedEventResponse.seller)
                 .price(Double.valueOf(String.valueOf(price)))
                 .type("market")
@@ -513,7 +514,8 @@ public class ContractServiceImpl implements ContractService {
     private void handlePetSoldEvent(Log log) {
         System.out.println("handling Pet Sold..........");
         PetMarket_abi.PetSoldEventResponse petSoldEventResponse = getPetSoldEventFromLog(log);
-        MongoCollection<Document> collection = mongoDAO.getCollection("pet");
+        MongoCollection<Document> collection_pet = mongoDAO.getCollection("pet");
+        MongoCollection<Document> collection_market = mongoDAO.getCollection("market_history");
         History history = historyMap.get(petSoldEventResponse.tokenId.intValue());
         history.setBuyerId(petSoldEventResponse.buyer);
         history.setDateTime(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));
@@ -525,7 +527,7 @@ public class ContractServiceImpl implements ContractService {
                         .price(history.getPrice())
                         .type(history.getType()).build();
 
-        collection.updateOne(
+        collection_pet.updateOne(
                 Filters.eq("id", petSoldEventResponse.tokenId.intValue()),
                 Updates.combine(
                         Updates.set("owner", petSoldEventResponse.buyer),
@@ -533,6 +535,26 @@ public class ContractServiceImpl implements ContractService {
                         Updates.set("states", "0")  // 更新状态为不可售
                 )
         );
+
+        // 构建查询条件
+        Document query = new Document("token_id", petSoldEventResponse.tokenId.intValue())
+                .append("end_time", String.valueOf(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime)));
+
+        // 检查是否已存在相同的token_id和end_time组合
+        try (MongoCursor<Document> cursor = collection_market.find(query).iterator()) {
+            if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
+                System.out.println("------------------------------------");
+                Document document = new Document("token_id", history.getTokenId())
+                        .append("seller_id", petSoldEventResponse.buyer)
+                        .append("buyer_id", petSoldEventResponse.buyer)
+                        .append("end_time", String.valueOf(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime)))
+                        .append("price", Double.valueOf(String.valueOf(weiToEther(petSoldEventResponse.price))));
+                collection_market.insertOne(document);
+            } else {
+                System.out.println("Document with same token_id and end_time already exists.");
+            }
+        }
+
 
         System.out.println("token id: "+ petSoldEventResponse.tokenId + ", buyer: "+ petSoldEventResponse.buyer +
                 ", market_price: "+ weiToEther(petSoldEventResponse.price) + ", endtime: "+ convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));

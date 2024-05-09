@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.uobfintech.cyberpets.entity.Auction;
+import com.uobfintech.cyberpets.entity.History;
 import com.uobfintech.cyberpets.entity.LotteryHistory;
 import com.uobfintech.cyberpets.repository.MongoDAO;
 import com.uobfintech.cyberpets.service.HistoryService;
@@ -74,6 +75,33 @@ public class HistoryServiceImpl implements HistoryService {
             auctions.add(auction);
         }
         return auctions;
+    }
+
+    public List<History> findAllMarketHistory(){
+        MongoCollection<Document> collection = mongoDAO.getCollection("market_history");
+        List<Document> documents = new ArrayList<>();
+        List<History> histories = new ArrayList<>();
+        // 查询所有文档
+        try (MongoCursor<Document> cursor = collection.find().iterator()) {
+            while (cursor.hasNext()) {
+                Document doc = cursor.next();
+                documents.add(doc);
+            }
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+        for (Document doc : documents) {
+            if (doc.getString("end_time") != null) {
+                History history = History.builder()
+                        .tokenId(doc.getInteger("token_id"))
+                        .sellerId(doc.getString("seller_id"))
+                        .buyerId(doc.getString("buyer_id"))
+                        .dateTime(ZonedDateTime.parse(doc.getString("end_time")))
+                        .price(doc.getDouble("price"))
+                        .type("market").build();
+                histories.add(history);
+            }
+        }
+        return histories;
     }
 
 }

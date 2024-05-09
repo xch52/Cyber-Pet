@@ -11,16 +11,6 @@ import java.time.ZonedDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HistoyDTO {
-
-    private String buyerId;
-
-    private String sellerId;
-
-    private String dateTime;
-
-    private Double price;
-
-    private String type;
-
+public class LotteryDatetime {
+    private ZonedDateTime dateTime;
 }

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.uobfintech.cyberpets.entity.Auction;
+import com.uobfintech.cyberpets.entity.History;
 import com.uobfintech.cyberpets.entity.LotteryHistory;
 import com.uobfintech.cyberpets.result.Result;
 import com.uobfintech.cyberpets.service.HistoryService;
@@ -30,5 +31,11 @@ public class HistoryController {
     public Result getAuctionHistoy(){
         List<Auction> auctions = historyService.findAllAuction();
         return Result.success(auctions);
+    }
+
+    @GetMapping("market")
+    public Result getMarketHistoy(){
+        List<History> histories = historyService.findAllMarketHistory();
+        return Result.success(histories);
     }
 }

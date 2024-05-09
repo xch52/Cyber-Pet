@@ -37,6 +37,8 @@ public class Pet {
 
     private List<LotteryHistory> lotteryHistory;
 
+    private List<LotteryDatetime> lotteryDatetime;
+
     private Double auctionPrice;
 
     private Double marketPrice;

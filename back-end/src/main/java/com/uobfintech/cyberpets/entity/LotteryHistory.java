@@ -26,4 +26,8 @@ public class LotteryHistory {
     private Integer amount;
 
     private List<Integer> tokenIds;
+
+    // private String image;
+
+    // private String title;
 }
