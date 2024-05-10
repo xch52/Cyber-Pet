@@ -132,44 +132,93 @@ export default function History() {
   });
 
 
-// 获取全部： http://44.202.121.86:9000/api/pets/all
-// 获取by ID： http://44.202.121.86:9000/api/pets/id
+// Auction地址： http://13.40.175.75:9000/api/pets/auction
+// Market地址： http://44.202.121.86:9000/api/pets/market
 
   // 获取正在拍卖的宠物信息
   useEffect(() => {
-
-    const fetchSoldProducts = async () => {
-      setProducts([]);
+    async function fetchHistory() {
       try {
-        const response = await fetch('http://44.202.121.86:9000/api/pets/all');
-        const json = await response.json();
-        if (json.code === 1 && json.msg === "success") {
-          const soldProduct = json.data.map(productData => ({
-            id: productData.id,
-            image: productData.imageUrl,
-            title: productData.title,
-            petclass: productData.petclass,
-            attribute: productData.attributes,
-            description: productData.description,
-            prebid: productData.history || [],
-            price: productData.price,
-            states: productData.states,
-            alt: "Product " + productData.id
-           }));
+        // 获取Auction和Market的历史数据
+        const auctionResponse = await fetch('http://13.40.175.75:9000/api/history/auction');
+        const marketResponse = await fetch('http://13.40.175.75:9000/api/history/market');
+        const auctionData = await auctionResponse.json();
+        const marketData = await marketResponse.json();
 
-          setProducts(soldProduct);  
-        } else {
-          console.error('Server response not successful:', json.msg);
+        if (auctionData.code === 1 && marketData.code === 1) {
+          const auctionProducts = auctionData.data.map(item => ({
+            tokenId: item.tokenId,
+            seller: item.seller,
+            price: item.highestBid,
+            startPrice: item.reservePrice,
+            highestBid: item.highestBid,
+            highestBidder: item.highestBidder,
+            buyer: item.highestBidder,
+            type: 'Auction',
+            startTime: item.startTime,
+            endTime: item.endTime,
+          }));
+          const marketProducts = marketData.data.map(item => ({
+            tokenId: item.tokenId,
+            seller: item.sellerId,
+            buyer: item.buyerId,
+            price: item.price,
+            type: 'Market',
+            endTime: item.dateTime
+          }));
+
+          // 合并两种产品列表
+          const combinedProducts = [...auctionProducts, ...marketProducts];
+
+          console.log("2 combined: ", combinedProducts);
+
+          // 获取所有tokenId对应的宠物详情
+          const petDetailsResponse = await fetch('http://13.40.175.75:9000/api/pets/all');
+          const petDetailsData = await petDetailsResponse.json();
+
+          if (petDetailsData.code === 1) {
+            const petsDetailsMap = petDetailsData.data.reduce((acc, pet) => {
+              acc[pet.id] = pet;
+              return acc;
+            }, {});
+
+            // 合并宠物详细信息到历史记录
+            const mergedProducts = combinedProducts.map(product => {
+              const petDetails = petsDetailsMap[product.tokenId];
+              if (!petDetails) {
+                console.error('No details found for tokenId:', product.tokenId);
+                return product; // 返回原始产品信息或可能定义的默认值
+              }
+              return {
+                ...product,
+                title: petDetails.title,
+                imageUrl: petDetails.imageUrl,
+                petclass: petDetails.petclass,
+                attribute: petDetails.attributes.join(', '),
+                description: petDetails.description
+              };
+            });
+
+            setProducts(mergedProducts);
+            console.log("3 combined: ", mergedProducts);
+          }
         }
       } catch (error) {
-        console.error('Error fetching products from API:', error);
+        console.error('Error fetching data:', error);
       }
     }
 
+    fetchHistory();
 
-    fetchSoldProducts();
+    // const interval = setInterval(loadData, 30000);  // 每30秒刷新数据
+
+    // return () => clearInterval(interval); 
 
   }, [petAuction, petNFT, web3]);
+
+
+
+
 
 
 
@@ -261,10 +310,22 @@ export default function History() {
                       petclass={product.petclass}
                       attribute={product.attribute}
                       description={product.description}
+
+                      type={product.type}
+                      seller={product.seller}
+                      buyer={product.buyer}
+
+                      highestBid={product.highestBid}
+                      highestBidder={product.highestBidder}
+                      startTime={product.startTime}
+                      endTime={product.endTime}
+                      //startPrice={startPrice}
+                      
                       price={`${product.price} ETH`}
                       prebid={product.prebid}
                       states={product.states}
                       deadline={product.deadline}
+
                       alt={product.alt}
                       tokenId={product.tokenId}
                       petAuction={petAuction}

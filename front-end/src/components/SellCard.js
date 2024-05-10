@@ -255,7 +255,7 @@ const bidSubmit = async () => {
                         margin="dense"
                         id="name"
                         label="Bid Amount (ETH)"
-                        type="text"
+                        type="number"
                         fullWidth
                         variant="standard"
                         value={bidAmount}

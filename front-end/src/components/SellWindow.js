@@ -159,6 +159,7 @@ export default function SellWindows({ petsId }) {
                   fullWidth
                   id="price"
                   label="Start Price (Ether)"
+                  type="number"
                   name="price"
                   autoComplete="price"
                   autoFocus
@@ -174,6 +175,7 @@ export default function SellWindows({ petsId }) {
                     fullWidth
                     id="duration"
                     label="Duration (Seconds)"
+                    type="number"
                     name="duration"
                     autoComplete="duration"
                     value={duration}

@@ -169,7 +169,8 @@ export default function GashPage() {
             price: item.marketPrice || 'N/A',  // Assuming 'marketPrice' is the current price to display
             attributes: item.attributes.join(', '),  // Joining attributes array to a string for display
             petclass: item.petclass,
-            lotteryHistory: item.lotteryHistory,
+            //lotteryHistory: item.lotteryHistory,
+            lotteryDatetime: item.lotteryDatetime,
             alt: `Product ${item.id}`
           })));
         } else {
@@ -183,6 +184,10 @@ export default function GashPage() {
     fetchProducts();
   }, []);
 
+  // 从合约中获取宠物信息
+
+
+
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -190,9 +195,10 @@ export default function GashPage() {
       <Container maxWidth="lg">
         <Header title="CyberPet" sections={sections} />
 
-        <Box sx={{ overflowX: 'auto' }}>
-          <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)' }} cols={products.length} rowHeight={300}>
-            {products.filter(product => product.lotteryHistory == null).map((product) => (
+        {/* 二级宠物展示框 */}
+        <Box sx={{ overflowX: 'auto', display: 'flex', justifyContent: 'center', marginBottom: 4  }}>
+        <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)', width: 'auto', height: 300, justifyContent: 'center'  }} cols={products.filter(p => p.petclass === '2').length} rowHeight={300}>
+            {products.filter(product => product.petclass === '2' && !product.lotteryDatetime).map((product) => (
               <ImageListItem key={product.id}>
                 <img
                   src={product.image}
@@ -204,6 +210,23 @@ export default function GashPage() {
           </ImageList>
         </Box>
 
+        {/* 三级宠物展示卡 */}
+        <Box sx={{ overflowX: 'auto', display: 'flex', justifyContent: 'center'  }}>
+          <ImageList sx={{ flexWrap: 'nowrap', transform: 'translateZ(0)', width: 'auto', height: 300, justifyContent: 'center'  }} cols={products.filter(p => p.petclass === '3').length} rowHeight={300}>
+            {products.filter(product => product.petclass === '3' && !product.lotteryDatetime).map((product) => (
+              <ImageListItem key={product.id}>
+                <img
+                  src={product.image}
+                  alt={`Product ${product.id}`}
+                  loading="lazy"
+                />
+              </ImageListItem>
+            ))}
+          </ImageList>
+        </Box>
+
+
+        {/* 抽奖组件 */}
         <Lottery />
 
       </Container>
@@ -214,4 +237,3 @@ export default function GashPage() {
     </ThemeProvider>
   );
 }
-

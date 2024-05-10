@@ -7,7 +7,7 @@ import { Card, CardContent, CardMedia, Dialog, DialogActions, DialogContent, Dia
 import { useWeb3 } from '../Web3Context';
 
 
-export default function SellCard({ image, title, petclass, attribute, description, price, prebid, states, deadline, alt, tokenId, petAuction, web3 }) {
+export default function SellCard({ image, title, petclass, attribute, description, type, seller, buyer, highestBid, highestBidder, startTime, endTime, price, prebid, states, deadline, alt, tokenId, petAuction, web3 }) {
 
     // 定义各种状态变量
     //const { petAuction, web3, account } = useWeb3();
@@ -115,7 +115,7 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         </Typography>
                         {timeLeft.timeOut ? ( // 检查是否超时
                             <Typography variant="subtitle2" color="error" style={{ marginLeft: '0.5rem' }}>
-                                Sold
+                                Transaction end
                             </Typography>
                         ) : (
                             <Typography variant="subtitle2" color="green" style={{ marginLeft: '0.5rem' }}>
@@ -170,7 +170,7 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                             {title}
                         </Typography>
                         <Typography variant="h5" style={{ marginBottom: '16px', color: '#FF5733' }}>
-                            Attributes: {attribute.join(", ")}
+                            Attributes: {attribute}
                         </Typography>
                         {/* <CardMedia
                             component="img"
@@ -184,16 +184,43 @@ export default function SellCard({ image, title, petclass, attribute, descriptio
                         <Typography variant="h6">
                             Description: {description}
                         </Typography>
+                        <Typography variant="h6">
+                            Transaction type: {type}
+                        </Typography>
+                        <Typography variant="h6">
+                            Seller: {seller}
+                        </Typography>
+                        <Typography variant="h6">
+                            Buyer: {buyer}
+                        </Typography>
+
+                        <Typography variant="h6">
+                            highestBid: {highestBid}
+                        </Typography>
+                        <Typography variant="h6">
+                            highestBidder: {highestBidder}
+                        </Typography>
+                        <Typography variant="h6">
+                            startTime: {startTime}
+                        </Typography>
+                        <Typography variant="h6">
+                            endTime: {endTime}
+                        </Typography>
+
+
                         {/* <Typography variant="body1">Previous bids: {prebid} ETH</Typography> */}
                         {/* <Typography variant="h6">
                             Status: {states === '1' ? 'On Sale' : 'Sold Out'}
                         </Typography> */}
-                        <Typography variant="h6" style={{ marginTop: '20px' }}>
+
+                        {/* 不再需要显示历史出价 */}
+                        {/* <Typography variant="h6" style={{ marginTop: '20px' }}>
                             Previous Bids (from previous to latest):
-                        </Typography>
-                        {prebid.map((bid, index) => (
+                        </Typography> */}
+
+                        {/* {prebid.map((bid, index) => (
                             <Typography key={index} variant="h6">{`${index + 1}. ${bid} ETH`}</Typography>
-                        ))}
+                        ))} */}
                     </DialogContentText>
                 </DialogContent>
                 <DialogActions>
