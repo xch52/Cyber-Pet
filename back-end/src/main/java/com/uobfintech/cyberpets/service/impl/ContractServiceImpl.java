@@ -314,7 +314,6 @@ public class ContractServiceImpl implements ContractService {
         subscribeToBidPlacedEvent();
         subscribeToAuctionEndedEvent();
         subscribeToAuctionAutoEndedEvent();
-        // subscribeToPEvent();
 
     }
 
@@ -393,11 +392,6 @@ public class ContractServiceImpl implements ContractService {
         web3j.ethLogFlowable(filter).subscribe(this::handleBidPlacedEvent, this::handleError);
     }
 
-//    @Async
-//    public void subscribeToPEvent() {
-//        EthFilter filter = createFilter(P_EVENT, contractAddressLottery);
-//        web3j.ethLogFlowable(filter).subscribe(this::handlePEvent, this::handleError);
-//    }
 
     @Async
     public void subscribeToPetMinted() {
@@ -408,7 +402,7 @@ public class ContractServiceImpl implements ContractService {
 
 
     private void handleLotteryRequestedEvent(Log log) {
-        System.out.println("handling Lottery Requested..........");
+        // System.out.println("handling Lottery Requested..........");
         LotteryRequestedEventResponse lotteryRequestedEventResponse = getLotteryRequestedEventFromLog(log);
         MongoCollection<Document> collection = mongoDAO.getCollection("lottery_history");
         Document query = new Document("request_id", String.valueOf(lotteryRequestedEventResponse.requestId));
@@ -437,14 +431,14 @@ public class ContractServiceImpl implements ContractService {
 //        }
 
 
-        System.out.println("requester: "+ lotteryRequestedEventResponse.requester + ", request id: "
-                + lotteryRequestedEventResponse.requestId + ", amount: "+ lotteryRequestedEventResponse.amount);
+//        System.out.println("requester: "+ lotteryRequestedEventResponse.requester + ", request id: "
+//                + lotteryRequestedEventResponse.requestId + ", amount: "+ lotteryRequestedEventResponse.amount);
 
     }
 
 
     private void handleLotteryFulfilledEvent(Log log) {
-        System.out.println("handling Lottery Fulfilled..........");
+        // System.out.println("handling Lottery Fulfilled..........");
         PetLottery_abi.LotteryFulfilledEventResponse lotteryFulfilledEventResponse = getLotteryFulfilledEventFromLog(log);
 
         List<Integer> tokenIds = new ArrayList<>();
@@ -478,6 +472,7 @@ public class ContractServiceImpl implements ContractService {
 
         LotteryHistory lotteryHistory = LotteryHistory.builder()
                 .requester(lotteryFulfilledEventResponse.requester)
+                .requestId(lotteryFulfilledEventResponse.requestId.toString())
                 .tokenIds(tokenIds)
                 .dateTime(datetime)
                 .build();
@@ -485,7 +480,7 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handlePetListedEvent(Log log) {
-        System.out.println("handling Pet listed..........");
+        // System.out.println("handling Pet listed..........");
         PetListedEventResponse petListedEventResponse = getPetListedEventFromLog(log);
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         BigDecimal price = weiToEther(petListedEventResponse.price);
@@ -504,15 +499,15 @@ public class ContractServiceImpl implements ContractService {
                         Updates.set("states", "1")  // 更新状态为可出售
                 )
         );
-        System.out.println("token id: "+ petListedEventResponse.tokenId + ", seller: "+ petListedEventResponse.seller +
-                ", price: "+ price);
+        // System.out.println("token id: "+ petListedEventResponse.tokenId + ", seller: "+ petListedEventResponse.seller +
+        //        ", price: "+ price);
     }
 
     // states 0 不能交易
     // states 1 能交易
 
     private void handlePetSoldEvent(Log log) {
-        System.out.println("handling Pet Sold..........");
+        // System.out.println("handling Pet Sold..........");
         PetMarket_abi.PetSoldEventResponse petSoldEventResponse = getPetSoldEventFromLog(log);
         MongoCollection<Document> collection_pet = mongoDAO.getCollection("pet");
         MongoCollection<Document> collection_market = mongoDAO.getCollection("market_history");
@@ -551,13 +546,13 @@ public class ContractServiceImpl implements ContractService {
                         .append("price", Double.valueOf(String.valueOf(weiToEther(petSoldEventResponse.price))));
                 collection_market.insertOne(document);
             } else {
-                System.out.println("Document with same token_id and end_time already exists.");
+                // System.out.println("Document with same token_id and end_time already exists.");
             }
         }
 
 
-        System.out.println("token id: "+ petSoldEventResponse.tokenId + ", buyer: "+ petSoldEventResponse.buyer +
-                ", market_price: "+ weiToEther(petSoldEventResponse.price) + ", endtime: "+ convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));
+//        System.out.println("token id: "+ petSoldEventResponse.tokenId + ", buyer: "+ petSoldEventResponse.buyer +
+//                ", market_price: "+ weiToEther(petSoldEventResponse.price) + ", endtime: "+ convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));
 
     }
 
@@ -574,7 +569,7 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handleAuctionCreatedEvent(Log log) {
-        System.out.println("handling Auction Created..........");
+        // System.out.println("handling Auction Created..........");
         AuctionCreatedEventResponse auctionCreatedEventResponse = getAuctionCreatedEventFromLog(log);
         Auction auction = getAuctionById(auctionCreatedEventResponse.tokenId);
         auction.setSeller(auctionCreatedEventResponse.seller);
@@ -603,7 +598,7 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handleBidPlacedEvent(Log log) {
-        System.out.println("handling Bid Placed..........");
+        // System.out.println("handling Bid Placed..........");
         BidPlacedEventResponse bidPlacedEventResponse = getBidPlacedEventFromLog(log);
 
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
@@ -613,14 +608,14 @@ public class ContractServiceImpl implements ContractService {
                 Filters.eq("id", bidPlacedEventResponse.tokenId.intValue()),
                 Updates.addToSet("prebid", Double.valueOf(String.valueOf(eth)))
         );
-        System.out.println(result);
+        // System.out.println(result);
 
-        System.out.println("token id: "+ bidPlacedEventResponse.tokenId + ", bidder: "+ bidPlacedEventResponse.bidder + ", amount: "+ eth);
+        // System.out.println("token id: "+ bidPlacedEventResponse.tokenId + ", bidder: "+ bidPlacedEventResponse.bidder + ", amount: "+ eth);
     }
 
 
     private void handleAuctionEndedEvent(Log log) {
-        System.out.println("handling Auction Ended..........");
+        // System.out.println("handling Auction Ended..........");
         PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse =  getAuctionEndedEventFromLog(log);
         for (Auction auction : auctionList) {
 
@@ -677,7 +672,7 @@ public class ContractServiceImpl implements ContractService {
         if (!Objects.equals(auctionEndedEventResponse.winner, "0x0000000000000000000000000000000000000000")){
 
             MongoCollection<Document> collection = mongoDAO.getCollection("pet");
-            System.out.println("***********************"+auctionEndedEventResponse.tokenId.intValue());
+            // System.out.println("***********************"+auctionEndedEventResponse.tokenId.intValue());
             BigDecimal eth = weiToEther(auctionEndedEventResponse.amount);
             // 向数组中添加一个元素，如果元素已存在，则不会重复添加
             collection.updateOne(
@@ -693,15 +688,14 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handleAuctionAutoEnded(Log log) {
-        System.out.println("handling Auction Auto Ended..........");
         PetAuction_abi.AuctionAutoEndedEventResponse auctionAutoEndedEventResponse =  getAuctionAutoEndedEventFromLog(log);
-        System.out.println("token id: "+auctionAutoEndedEventResponse.tokenId + ", winner: "
+        System.out.println("Auction Auto Ended： token id: "+auctionAutoEndedEventResponse.tokenId + ", winner: "
                 +auctionAutoEndedEventResponse.winner + ", amoumt: "+auctionAutoEndedEventResponse.amount);
     }
 
 
     private void handlePetMintedEvent(Log log) {
-        System.out.println("handling Pet Minted..........");
+        // System.out.println("handling Pet Minted..........");
         PetNFT_abi.PetMintedEventResponse petMintedEventResponse = PetNFT_abi.getPetMintedEventFromLog(log);
         List<String> attributes = new ArrayList<>();
         attributes.add(petMintedEventResponse.appearance);
@@ -716,7 +710,7 @@ public class ContractServiceImpl implements ContractService {
                 .imageUrl(petMintedEventResponse.url)
                 .jsonUri(petMintedEventResponse.uri)
                 .build();
-        System.out.println(pet);
+        // System.out.println(pet);
 
 
 
