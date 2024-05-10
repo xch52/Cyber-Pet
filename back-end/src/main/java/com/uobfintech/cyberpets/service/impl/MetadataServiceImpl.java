@@ -66,7 +66,7 @@ public class MetadataServiceImpl implements MetadataService {
             List<String> lottery_s = doc.getList("lottery_hisotory", String.class);
         }
 
-        System.out.println("lotteryHistory: "+doc.getList("lottery_history", String.class));
+        // System.out.println("lotteryHistory: "+doc.getList("lottery_history", String.class));
         //List<Document> history = (List<Document>) doc.get("history");
         // 假设 'doc' 是你从数据库查询到的 Document 对象
 

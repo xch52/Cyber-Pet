@@ -25,7 +25,7 @@ public class MetadataController {
     public Result getPets(@RequestParam(required = false) String filter,
                           @RequestParam(required = false) String sort,
                           @RequestParam(required = false) Integer limit) {
-        System.out.println("get Pets....");
+        // System.out.println("get Pets....");
         List<Pet> pets = metadataService.findAllPets();
         if (filter != null){
 
