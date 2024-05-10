@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import { makeStyles } from '@mui/styles';
 import Container from '@mui/material/Container';
-import { green  } from '@mui/material/colors';
+import { green, red  } from '@mui/material/colors';
 import { useEffect, useState, useContext } from 'react';
 import { useWeb3 } from '../Web3Context';
 
@@ -63,34 +63,38 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-const tiers_1 = [
+const tiers_2 = [
     {
         title: 'Luxury',
         subheader: 'Most popular',
         price: '0.01',
+        lotteryFee : 0.002,
         chance: '5 chances',
+        amount: 5,
         description: [
             '5 chances to wish',
-            '2 starts pet is promised',
-            'Higher probability',
-            'Lower single price',
+            '2 stars pet is promised',
+            // 'Higher probability',
+            // 'Lower single price',
         ],
         buttonText: 'Make a wish',
         buttonVariant: 'contained',
     },
 ];
 
-const tiers_2 = [
+const tiers_1 = [
     {
         title: 'Basic',
         subheader: 'Worth trying',
         price: '0.002',
+        lotteryFee : 0.002,
         chance: '1 chance',
+        amount: 1,
         description: [
             '1 chance to wish',
             'no promise',
-            'Basic probability',
-            'Basic single price',
+            // 'Basic probability',
+            // 'Basic single price',
         ],
         buttonText: 'Make a wish',
         buttonVariant: 'contained',
@@ -102,7 +106,33 @@ export default function Lottery() {
 
     const allTiers = [...tiers_1, ...tiers_2];
     const classes = useStyles();
-    const { petLottery, web3 } = useWeb3();  // 使用 useContext 获取智能合约实例
+    const { petLottery, web3, account } = useWeb3();  // 使用 useContext 获取智能合约实例
+
+
+
+    const makeWish = async (tier) => {
+        const amount = tier.amount;  // 根据选择的套餐决定数量
+        const priceWei = web3.utils.toWei((tier.lotteryFee * amount).toString(), 'ether');
+        console.log("Amount: ", amount);
+        console.log("lotteryFee: ", tier.lotteryFee);
+        try {
+            if (!petLottery) {
+                console.log("Contract not loaded or wallet not connected");
+                return;
+            }
+
+            await petLottery.methods.requestRandomWords(amount).send({
+                from: account,
+                value: priceWei
+            });
+            alert('Transaction submitted! Check your wallet.');
+        } catch (error) {
+            console.error('Error sending transaction:', error);
+            alert('Transaction failed: ' + error.message);
+        }
+    };
+
+
 
 
     return (
@@ -146,14 +176,14 @@ export default function Lottery() {
                                     </div>
                                     <ul>
                                         {tier.description.map((line) => (
-                                            <Typography component="li" variant="subtitle1" align="center" key={line}>
+                                            <Typography component="li" variant="subtitle1" align="center" key={line} color={red}>
                                                 {line}
                                             </Typography>
                                         ))}
                                     </ul>
                                 </CardContent>
                                 <CardActions>
-                                    <Button fullWidth variant={tier.buttonVariant} color="primary">
+                                    <Button fullWidth variant={tier.buttonVariant} color="primary"  onClick={() => makeWish(tier)}>
                                         {tier.buttonText}
                                     </Button>
                                 </CardActions>

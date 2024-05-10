@@ -167,7 +167,12 @@ export default function FreeMarket() {
     
 
     fetchActiveSales();
-  }, [petMarket, petNFT]);
+
+    const interval = setInterval(fetchActiveSales, 5000);  // 每5秒刷新数据
+
+    return () => clearInterval(interval); 
+
+  }, [petMarket, petNFT, web3]);
 
   return (
     <ThemeProvider theme={defaultTheme}>

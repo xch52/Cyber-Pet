@@ -26,7 +26,7 @@ import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { useWeb3 } from '../Web3Context';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 
 const sections = [
@@ -78,7 +78,7 @@ const defaultTheme = createTheme();
 
 export default function AuctionMarket() {
 
-  const { petAuction, petNFT, web3 } = useWeb3();
+  const { petAuction, petNFT, web3, account } = useWeb3();
   const [isLoading, setIsLoading] = useState(true);
   const [showClass1, setShowClass1] = useState(false);
   const [showClass2, setShowClass2] = useState(false);
@@ -134,7 +134,6 @@ export default function AuctionMarket() {
   // 获取正在拍卖的宠物信息
   useEffect(() => {
     
-    
     const fetchAuctions = async () => {
       if (!petAuction || !web3 || !petNFT) {
         console.log("Waiting for initialization...");
@@ -149,6 +148,7 @@ export default function AuctionMarket() {
           const tokenIds = data[0];
           const auctionsBrief = data[1];
           const petsBrief = data[2];
+          const bidsHistory = data[3];
     
           console.log('Token IDs:', tokenIds);
           console.log('Auction Details:', auctionsBrief);
@@ -164,7 +164,7 @@ export default function AuctionMarket() {
             attribute: [petsBrief[index].appearance + ', ' + petsBrief[index].character] ,
             description: petsBrief[index].description,
             price: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'),
-            prebid: [],
+            prebid: bidsHistory[index].map(bid => web3.utils.fromWei(bid.toString(), 'ether')),
             states: auctionsBrief[index].active ? "1" : "0",
             deadline: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(),
             alt: "Product " + tokenId,
@@ -185,8 +185,14 @@ export default function AuctionMarket() {
     };
     console.log(petAuction)
     fetchAuctions();
+    
+    const interval = setInterval(fetchAuctions, 5000);  // 每5秒刷新数据
+
+    return () => clearInterval(interval);
 
   }, [petAuction, petNFT, web3]);
+
+
 
 
     return (

@@ -84,6 +84,11 @@ export default function PortPage() {
     };
   
     fetchPets();
+
+    const interval = setInterval(fetchPets, 5000);  // 每5秒刷新数据
+
+    return () => clearInterval(interval); 
+    
   }, [petNFT, account]); 
 
 
