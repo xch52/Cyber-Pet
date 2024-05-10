@@ -33,7 +33,7 @@ public class Web3jConfig {
 
     @Bean
     public String contractAddressNFT() {
-        return "0x6E9b5e45D65fE501eda45E16aBbCe5919814946f"; // 合约地址
+        return "0x3BD54DD1eB5CFA6d99cBBE11281eFc10912A0e95"; // 合约地址
     }
 
 
