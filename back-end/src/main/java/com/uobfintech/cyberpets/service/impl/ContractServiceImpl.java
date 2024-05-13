@@ -77,21 +77,13 @@ public class ContractServiceImpl implements ContractService {
     private final String contractAddressLottery;
     private final String contractAddressAuction;
     private final String contractAddressMarket;
-
     private final String contractAddressNFT;
-
     private List<Auction> auctionList;
-
-    private Map<Integer, History> historyMap =  new HashMap<>();
-
+    private Map<Integer, History> historyMap = new HashMap<>();
     // @Autowired
     private MongoDAO mongoDAO;
-
     @Autowired
     private TaskScheduler taskScheduler;
-
-    // Assume a very low gas price since it's a read operation.
-
     private final static BigInteger WEI_IN_ETHER = new BigInteger("1000000000000000000"); // 10^18
 
 
@@ -105,53 +97,17 @@ public class ContractServiceImpl implements ContractService {
         this.mongoDAO = mongoDAO;
     }
 
-    private String getAddressFromTopic(String topicHex) {
-        // 地址是从第25个字符开始的，持续到字符串结束（去除前面的24个字符，即12个字节的零）
-        return "0x" + topicHex.substring(24);
-    }
 
-    /**
-     * 解码 data 字符串中的 uint256 数据。
-     * 注意：此函数只是一个简单示例，实际解码可能需要考虑数据的偏移量和具体格式。
-     */
-    private BigInteger decodeUint256(String data) {
-        // 假设 data 就是直接的数值字符串，实际中可能需要根据ABI规则进行解码
-        return new BigInteger(data.substring(2), 16); // 去除前缀'0x'，假设数据是十六进制的
-    }
-
-    public LocalDateTime convertBlockchainTimestamp(BigInteger timestamp) {
-        // 将秒转换为毫秒
-        long milliseconds = timestamp.multiply(BigInteger.valueOf(1000)).longValue();
-
-        // 创建Instant对象
-        Instant instant = Instant.ofEpochMilli(milliseconds);
-
-        // 转换为LocalDateTime（这里假设系统默认时区）
-
-        return LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-    }
+    // Converts a blockchain timestamp to a time with time zone information
     public ZonedDateTime convertToZonedDateTimeUTCPlusOne(BigInteger timestamp) {
-        // 将秒转换为毫秒
+        // Convert seconds to milliseconds
         long milliseconds = timestamp.multiply(BigInteger.valueOf(1000)).longValue();
-
-        // 创建Instant对象
         Instant instant = Instant.ofEpochMilli(milliseconds);
 
-        // 转换为ZonedDateTime，在UTC+1时区
-
+        // Convert to ZonedDateTime in UTC+1 / London time zone
         return instant.atZone(ZoneId.of("Europe/London"));
     }
 
-    public BigInteger convertBackToTimestamp(ZonedDateTime zonedDateTime) {
-        // 从ZonedDateTime获取Instant对象
-        Instant instant = zonedDateTime.toInstant();
-
-        // 将Instant的毫秒数转换为秒数
-        long seconds = instant.getEpochSecond();
-
-        // 将秒数转换为BigInteger
-        return BigInteger.valueOf(seconds);
-    }
 
     @Async
     public void callAuctionEndedFunc(BigInteger tokenId) {
@@ -162,8 +118,6 @@ public class ContractServiceImpl implements ContractService {
 
             try {
                 TransactionReceipt result = remoteFunctionCall.send();
-                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
-
                 System.out.println("Contract returned: " + result);
                 System.out.println("Transaction complete, block number: " + result.getBlockNumber());
 
@@ -185,72 +139,13 @@ public class ContractServiceImpl implements ContractService {
     }
 
 
-//    @Async
-//    @Scheduled(fixedRate = 600000) // 每600000毫秒（即十分钟）执行一次
-//    public void callContractFunctionPeriodically() {
-//        try {
-//            Credentials credentials = Credentials.create("b67d61efaab1a9d65a53221c8cfbd89d38c72d6ff0ed40b8e4e4a56af607cb0b");
-////            BigInteger GAS_LIMIT = BigInteger.valueOf(9000000L);
-////            BigInteger GAS_PRICE = BigInteger.valueOf(2100000000L);
-//            PetAuction_abi petAuctionAbi = new PetAuction_abi(contractAddressAuction, web3j, credentials, new DefaultGasProvider());
-//            RemoteFunctionCall<TransactionReceipt> remoteFunctionCall
-//                    = petAuctionAbi.checkAndEndAuctions();
-//            // TransactionReceipt result = remoteFunctionCall.send();
-//
-//            try {
-//                TransactionReceipt result = remoteFunctionCall.send();
-//                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
-//
-//                System.out.println("Contract returned: " + result);
-//                System.out.println("Transaction complete, block number: " + result.getBlockNumber());
-//
-//
-//                String transactionHash = result.getTransactionHash();
-//                EthGetTransactionReceipt receipt = web3j.ethGetTransactionReceipt(transactionHash).send();
-//                if (receipt.getTransactionReceipt().isPresent()) {
-//                    System.out.println("Transaction " + transactionHash + " was included in block " + receipt.getTransactionReceipt().get().getBlockNumber());
-//                } else {
-//                    System.out.println("Transaction is still pending...");
-//                }
-//            } catch (Exception e) {
-//                System.err.println("Transaction failed: " + e.getMessage());
-//                e.printStackTrace();
-//            }
-//
-////            String encodedFunction = remoteFunctionCall.encodeFunctionCall();
-////            Transaction transaction = Transaction.createEthCallTransaction(null, contractAddressAuction, encodedFunction);
-////            EthCall response = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).send();
-////
-////            if (response.hasError()) {
-////                System.out.println("Error: " + response.getError().getMessage());
-////            }
-////            List<Type> result = remoteFunctionCall.decodeFunctionResponse(response.getValue());
-////
-////            if (!result.isEmpty()){
-////                System.out.println(result.get(0).getValue().toString());
-////            }else {
-////                System.out.println("No result");
-////            }
-//
-//
-//
-////            String functionName = "checkAndEndAuctions";
-////            // 调用具体的合约函数
-////            String result = callContractFunction(functionName);
-////            System.out.println("Contract function result: " + result);
-//
-//        } catch (Exception e) {
-//            System.err.println("Error during contract function call: " + e.getMessage());
-//        }
-//    }
-
-
     public String callContractFunction(String functionName) throws Exception {
         Function function = new Function(
                 functionName,
                 java.util.Collections.emptyList(),
                 // Arrays.asList(new Uint256(BigInteger.valueOf(123))),  // Your input parameters
-                Collections.singletonList(new org.web3j.abi.TypeReference<Uint256>() {}));
+                Collections.singletonList(new org.web3j.abi.TypeReference<Uint256>() {
+                }));
 
         String encodedFunction = FunctionEncoder.encode(function);
 
@@ -276,25 +171,20 @@ public class ContractServiceImpl implements ContractService {
                 inputParameters,
                 outputParameters);
 
-        // 编码函数调用，包含输入参数和期望的输出类型
+        // Encodes the function call, containing the input parameters and the expected output type
         String data = FunctionEncoder.encode(function);
 
-        // 创建交易对象
         Transaction transaction = Transaction.createEthCallTransaction(
                 null,  // 'from' address is null because it's a read-only call
                 this.contractAddressAuction,
                 data
         );
-
-        // 发送交易并获取响应
         EthCall response = this.web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).send();
 
-        // 检查是否有错误发生并处理结果
         if (response.hasError()) {
             return "Error: " + response.getError().getMessage();
         }
 
-        // 解码响应数据
         List<Type> result = FunctionReturnDecoder.decode(response.getValue(), function.getOutputParameters());
         return !result.isEmpty() ? result.get(0).toString() : "No result";
     }
@@ -314,7 +204,6 @@ public class ContractServiceImpl implements ContractService {
         subscribeToBidPlacedEvent();
         subscribeToAuctionEndedEvent();
         subscribeToAuctionAutoEndedEvent();
-
     }
 
 
@@ -329,11 +218,10 @@ public class ContractServiceImpl implements ContractService {
         return filter;
     }
 
-    // 定义处理错误的方法
+    // Define ways to handle errors
     private void handleError(Throwable e) {
         System.err.println("Error occurred: " + e.getMessage());
         e.printStackTrace();
-        // 这里可以添加更多的错误处理逻辑，例如重试机制或者报警通知等
     }
 
 
@@ -354,7 +242,6 @@ public class ContractServiceImpl implements ContractService {
         EthFilter filter = createFilter(PETLISTED_EVENT, contractAddressMarket);
         web3j.ethLogFlowable(filter).subscribe(this::handlePetListedEvent, this::handleError);
     }
-
 
     @Async
     public void subscribeToPetSoldEvent() {
@@ -400,36 +287,17 @@ public class ContractServiceImpl implements ContractService {
     }
 
 
-
     private void handleLotteryRequestedEvent(Log log) {
-        // System.out.println("handling Lottery Requested..........");
         LotteryRequestedEventResponse lotteryRequestedEventResponse = getLotteryRequestedEventFromLog(log);
         MongoCollection<Document> collection = mongoDAO.getCollection("lottery_history");
         Document query = new Document("request_id", String.valueOf(lotteryRequestedEventResponse.requestId));
         long count = collection.countDocuments(query);
-        if (count == 0){
+        if (count == 0) {
             Document document = new Document("requester", lotteryRequestedEventResponse.requester)
                     .append("request_id", String.valueOf(lotteryRequestedEventResponse.requestId))
                     .append("amount", lotteryRequestedEventResponse.amount.intValue());
             collection.insertOne(document);
         }
-
-//        // 构建查询条件
-//        Document query = new Document("requester", lotteryRequestedEventResponse.requester)
-//                .append("requestId", lotteryRequestedEventResponse.requestId);
-//
-//        // 检查是否已存在相同的token_id和end_time组合
-//        try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
-//            if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
-//                Document document = new Document("requester", lotteryRequestedEventResponse.requester)
-//                        .append("request_id", String.valueOf(lotteryRequestedEventResponse.requestId))
-//                        .append("amount", lotteryRequestedEventResponse.amount.intValue());
-//                collection.insertOne(document);
-//            } else {
-//                System.out.println("Document with same token_id and end_time already exists.");
-//            }
-//        }
-
 
 //        System.out.println("requester: "+ lotteryRequestedEventResponse.requester + ", request id: "
 //                + lotteryRequestedEventResponse.requestId + ", amount: "+ lotteryRequestedEventResponse.amount);
@@ -438,13 +306,11 @@ public class ContractServiceImpl implements ContractService {
 
 
     private void handleLotteryFulfilledEvent(Log log) {
-        // System.out.println("handling Lottery Fulfilled..........");
         PetLottery_abi.LotteryFulfilledEventResponse lotteryFulfilledEventResponse = getLotteryFulfilledEventFromLog(log);
 
         List<Integer> tokenIds = new ArrayList<>();
 
         for (BigInteger tokenId : lotteryFulfilledEventResponse.tokenIds) {
-            // 将BigInteger转换为int值并添加到列表中
             tokenIds.add(tokenId.intValue());
         }
         ZonedDateTime datetime = convertToZonedDateTimeUTCPlusOne(lotteryFulfilledEventResponse.timestamp);
@@ -466,10 +332,6 @@ public class ContractServiceImpl implements ContractService {
             );
         }
 
-
-
-
-
         LotteryHistory lotteryHistory = LotteryHistory.builder()
                 .requester(lotteryFulfilledEventResponse.requester)
                 .requestId(lotteryFulfilledEventResponse.requestId.toString())
@@ -480,13 +342,12 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handlePetListedEvent(Log log) {
-        // System.out.println("handling Pet listed..........");
         PetListedEventResponse petListedEventResponse = getPetListedEventFromLog(log);
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         BigDecimal price = weiToEther(petListedEventResponse.price);
         History history = History.builder()
                 .tokenId(petListedEventResponse.tokenId.intValue())
-                        .sellerId(petListedEventResponse.seller)
+                .sellerId(petListedEventResponse.seller)
                 .price(Double.valueOf(String.valueOf(price)))
                 .type("market")
                 .build();
@@ -507,7 +368,6 @@ public class ContractServiceImpl implements ContractService {
     // states 1 能交易
 
     private void handlePetSoldEvent(Log log) {
-        // System.out.println("handling Pet Sold..........");
         PetMarket_abi.PetSoldEventResponse petSoldEventResponse = getPetSoldEventFromLog(log);
         MongoCollection<Document> collection_pet = mongoDAO.getCollection("pet");
         MongoCollection<Document> collection_market = mongoDAO.getCollection("market_history");
@@ -516,28 +376,28 @@ public class ContractServiceImpl implements ContractService {
         history.setDateTime(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));
 
         HistoyDTO histoyDTO = HistoyDTO.builder()
-                        .buyerId(history.getBuyerId())
-                        .sellerId(history.getSellerId())
-                        .dateTime(String.valueOf(history.getDateTime()))
-                        .price(history.getPrice())
-                        .type(history.getType()).build();
+                .buyerId(history.getBuyerId())
+                .sellerId(history.getSellerId())
+                .dateTime(String.valueOf(history.getDateTime()))
+                .price(history.getPrice())
+                .type(history.getType()).build();
 
         collection_pet.updateOne(
                 Filters.eq("id", petSoldEventResponse.tokenId.intValue()),
                 Updates.combine(
                         Updates.set("owner", petSoldEventResponse.buyer),
-                        Updates.addToSet("history", histoyDTO),  // 更新价格
-                        Updates.set("states", "0")  // 更新状态为不可售
+                        Updates.addToSet("history", histoyDTO),  // Add history
+                        Updates.set("states", "0")  // Update its status to unsellable (states = 0)
                 )
         );
 
-        // 构建查询条件
+        // Construct query criteria
         Document query = new Document("token_id", petSoldEventResponse.tokenId.intValue())
                 .append("end_time", String.valueOf(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime)));
 
-        // 检查是否已存在相同的token_id和end_time组合
+        // Check whether the same combination of token_id and end_time already exists
         try (MongoCursor<Document> cursor = collection_market.find(query).iterator()) {
-            if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
+            if (!cursor.hasNext()) {  // If no matching documents are found, a new document is inserted
                 System.out.println("------------------------------------");
                 Document document = new Document("token_id", history.getTokenId())
                         .append("seller_id", petSoldEventResponse.buyer)
@@ -545,22 +405,15 @@ public class ContractServiceImpl implements ContractService {
                         .append("end_time", String.valueOf(convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime)))
                         .append("price", Double.valueOf(String.valueOf(weiToEther(petSoldEventResponse.price))));
                 collection_market.insertOne(document);
-            } else {
-                // System.out.println("Document with same token_id and end_time already exists.");
             }
         }
-
-
-//        System.out.println("token id: "+ petSoldEventResponse.tokenId + ", buyer: "+ petSoldEventResponse.buyer +
-//                ", market_price: "+ weiToEther(petSoldEventResponse.price) + ", endtime: "+ convertToZonedDateTimeUTCPlusOne(petSoldEventResponse.endTime));
-
     }
 
 
     private void handleSaleCancelledEvent(Log log) {
         System.out.println("handling Sale Cancelled..........");
         SaleCancelledEventResponse saleCancelledEventResponse = getSaleCancelledEventFromLog(log);
-        System.out.println("token id:"+ saleCancelledEventResponse.tokenId);
+        System.out.println("token id:" + saleCancelledEventResponse.tokenId);
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         collection.updateOne(
                 Filters.eq("id", saleCancelledEventResponse.tokenId.intValue()),
@@ -569,7 +422,6 @@ public class ContractServiceImpl implements ContractService {
     }
 
     private void handleAuctionCreatedEvent(Log log) {
-        // System.out.println("handling Auction Created..........");
         AuctionCreatedEventResponse auctionCreatedEventResponse = getAuctionCreatedEventFromLog(log);
         Auction auction = getAuctionById(auctionCreatedEventResponse.tokenId);
         auction.setSeller(auctionCreatedEventResponse.seller);
@@ -582,41 +434,37 @@ public class ContractServiceImpl implements ContractService {
         auctionList.add(auction);
         System.out.println(auction);
 
-        // 转换为long
+        // Convert to long
         long timestamp = auctionCreatedEventResponse.endTime.longValue();
 
-        // 使用java.util.Date
         Date date = new Date(timestamp * 1000L);
-        Date now = new Date();  // 获取当前时间
+        Date now = new Date();  // Get current time
 
-        // 检查是否应该调度任务
-        if (date.after(now)) {  // 如果date是将来的时间
+        // Check whether tasks should be scheduled
+        if (date.after(now)) {
             taskScheduler.schedule(() -> callAuctionEndedFunc(auctionCreatedEventResponse.tokenId), date);
         } else {
-            System.out.println("The task is not scheduled because the set time has passed.");
+            // System.out.println("The task is not scheduled because the set time has passed.");
         }
     }
 
     private void handleBidPlacedEvent(Log log) {
-        // System.out.println("handling Bid Placed..........");
         BidPlacedEventResponse bidPlacedEventResponse = getBidPlacedEventFromLog(log);
 
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         BigDecimal eth = weiToEther(bidPlacedEventResponse.amount);
-        // 向数组中添加一个元素，如果元素已存在，则不会重复添加
-        UpdateResult result = collection.updateOne(
+        // Adds an element to the array and does not repeat the addition if the element already exists
+        collection.updateOne(
                 Filters.eq("id", bidPlacedEventResponse.tokenId.intValue()),
                 Updates.addToSet("prebid", Double.valueOf(String.valueOf(eth)))
         );
-        // System.out.println(result);
 
         // System.out.println("token id: "+ bidPlacedEventResponse.tokenId + ", bidder: "+ bidPlacedEventResponse.bidder + ", amount: "+ eth);
     }
 
 
     private void handleAuctionEndedEvent(Log log) {
-        // System.out.println("handling Auction Ended..........");
-        PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse =  getAuctionEndedEventFromLog(log);
+        PetAuction_abi.AuctionEndedEventResponse auctionEndedEventResponse = getAuctionEndedEventFromLog(log);
         for (Auction auction : auctionList) {
 
             if (Objects.equals(auction.getTokenId(), auctionEndedEventResponse.tokenId.intValue()) &&
@@ -627,14 +475,13 @@ public class ContractServiceImpl implements ContractService {
 
                 MongoCollection<Document> collection = mongoDAO.getCollection("auction_history");
 
-
-                // 构建查询条件
+                // Construct query criteria
                 Document query = new Document("token_id", auction.getTokenId())
                         .append("end_time", String.valueOf(auction.getEndTime()));
 
-                // 检查是否已存在相同的token_id和end_time组合
+                // Check whether the same combination of token_id and end_time already exists
                 try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
-                    if (!cursor.hasNext()) {  // 如果没有找到任何匹配的文档，则插入新文档
+                    if (!cursor.hasNext()) {  // If no matching documents are found, a new document is inserted
                         Document document = new Document("token_id", auction.getTokenId())
                                 .append("seller", auction.getSeller())
                                 .append("start_time", String.valueOf(auction.getStartTime()))
@@ -646,35 +493,18 @@ public class ContractServiceImpl implements ContractService {
                         collection.insertOne(document);
                         System.out.println(auction);
                     } else {
-                        System.out.println("Document with same token_id and end_time already exists.");
+                        // System.out.println("Document with same token_id and end_time already exists.");
                     }
                 }
-//                // 创建一个复合唯一索引
-//                IndexOptions indexOptions = new IndexOptions().unique(true);
-//                collection.createIndex(Indexes.ascending("token_id", "end_time"), indexOptions);
-//                Document document = new Document("token_id", auction.getTokenId())
-//                        .append("seller", auction.getSeller())
-//                        .append("start_time", String.valueOf(auction.getStartTime()))
-//                        .append("end_time", String.valueOf(auction.getEndTime()))
-//                        .append("timestamp", String.valueOf(auction.getTimestamp()))
-//                        .append("highest_bid", Double.valueOf(String.valueOf(auction.getHighestBid())))
-//                        .append("highest_bidder", auction.getHighestBidder())
-//                        .append("reserve_price", auction.getReservePrice());
-//                // 插入文档到集合
-//                collection.insertOne(document);
-
             }
         }
 
 
-
-
-        if (!Objects.equals(auctionEndedEventResponse.winner, "0x0000000000000000000000000000000000000000")){
+        if (!Objects.equals(auctionEndedEventResponse.winner, "0x0000000000000000000000000000000000000000")) {
 
             MongoCollection<Document> collection = mongoDAO.getCollection("pet");
-            // System.out.println("***********************"+auctionEndedEventResponse.tokenId.intValue());
             BigDecimal eth = weiToEther(auctionEndedEventResponse.amount);
-            // 向数组中添加一个元素，如果元素已存在，则不会重复添加
+
             collection.updateOne(
                     Filters.eq("id", auctionEndedEventResponse.tokenId.intValue()),
                     Updates.combine(
@@ -682,20 +512,17 @@ public class ContractServiceImpl implements ContractService {
                             Updates.set("auction_price", Double.valueOf(String.valueOf(eth)))
                     )
             );
-
         }
-
     }
 
     private void handleAuctionAutoEnded(Log log) {
-        PetAuction_abi.AuctionAutoEndedEventResponse auctionAutoEndedEventResponse =  getAuctionAutoEndedEventFromLog(log);
-        System.out.println("Auction Auto Ended： token id: "+auctionAutoEndedEventResponse.tokenId + ", winner: "
-                +auctionAutoEndedEventResponse.winner + ", amoumt: "+auctionAutoEndedEventResponse.amount);
+        PetAuction_abi.AuctionAutoEndedEventResponse auctionAutoEndedEventResponse = getAuctionAutoEndedEventFromLog(log);
+//        System.out.println("Auction Auto Ended： token id: " + auctionAutoEndedEventResponse.tokenId + ", winner: "
+//                + auctionAutoEndedEventResponse.winner + ", amoumt: " + auctionAutoEndedEventResponse.amount);
     }
 
 
     private void handlePetMintedEvent(Log log) {
-        // System.out.println("handling Pet Minted..........");
         PetNFT_abi.PetMintedEventResponse petMintedEventResponse = PetNFT_abi.getPetMintedEventFromLog(log);
         List<String> attributes = new ArrayList<>();
         attributes.add(petMintedEventResponse.appearance);
@@ -710,16 +537,11 @@ public class ContractServiceImpl implements ContractService {
                 .imageUrl(petMintedEventResponse.url)
                 .jsonUri(petMintedEventResponse.uri)
                 .build();
-        // System.out.println(pet);
 
-
-
-//        Double [] notBidded = new Double[1];
-//        notBidded[0] = (double) -1;
         MongoCollection<Document> collection = mongoDAO.getCollection("pet");
         Document query = new Document("id", pet.getId());
         long count = collection.countDocuments(query);
-        if (count == 0){
+        if (count == 0) {
             List<Double> prebid = new ArrayList<>();
             Document doc = new Document("id", pet.getId())
                     .append("attributes", pet.getAttributes())
@@ -735,15 +557,10 @@ public class ContractServiceImpl implements ContractService {
                     .append("states", "0");
             collection.insertOne(doc);
         }
-
     }
 
     private Auction getAuctionById(BigInteger tokenId) {
         return Auction.builder().tokenId(tokenId.intValue()).build();
-    }
-
-    private Pet getPetById(Integer tokenId) {
-        return Pet.builder().id(tokenId).build();
     }
 
 }

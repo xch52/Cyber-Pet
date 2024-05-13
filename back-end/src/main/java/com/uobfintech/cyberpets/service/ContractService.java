@@ -17,4 +17,5 @@ public interface ContractService {
     String callContractFunction(String functionName, List<Type> inputParameters, List<TypeReference<?>> outputParameters) throws Exception;
 
     ZonedDateTime convertToZonedDateTimeUTCPlusOne(BigInteger timestamp);
+
 }
