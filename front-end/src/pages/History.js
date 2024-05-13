@@ -42,7 +42,7 @@ const sections = [
 const sidebar = {
   title: 'About',
   description:
-    'In the market you can trade your pet according to your preference. In addition, you can use filters to make specific choices. You can also click each image to get more information',
+    "Here you can check the history of all transactions that have closed, whether they are auction transactions or ordinary transactions. I'm sure it will enhance your understanding of two markets as a whole.",
   archives: [
     { title: 'Class 1 : Initial', url: '#' },
     { title: 'Class 2 : Mature', url: '#' },
@@ -111,6 +111,12 @@ export default function History() {
     setMaxPrice('');
   };
 
+  const [petNameFilter, setPetNameFilter] = useState('');
+
+  const clearPetName = () => {
+    setPetNameFilter(''); // 只清除宠物名称输入
+  };
+
   const filteredProducts = products.filter(product => {
     const classCheck = (showClass1 && product.petclass === "1") ||  // 宠物等级过滤器
       (showClass2 && product.petclass === "2") ||
@@ -121,7 +127,8 @@ export default function History() {
       (!showOnSale && !showSold);
     const priceCheck = (minPrice === '' || parseFloat(product.price) >= parseFloat(minPrice)) &&  // 价格过滤器
       (maxPrice === '' || parseFloat(product.price) <= parseFloat(maxPrice));
-    return classCheck && stateCheck && priceCheck;
+    const nameCheck = product.title.toLowerCase().includes(petNameFilter.toLowerCase()); // 宠物名称过滤
+    return classCheck && stateCheck && priceCheck && nameCheck;
   }).sort((a, b) => {
     if (priceOrder === 'highToLow') {    // 价格排序调整
       return b.price - a.price;
@@ -132,8 +139,8 @@ export default function History() {
   });
 
 
-// Auction地址： http://13.40.175.75:9000/api/pets/auction
-// Market地址： http://44.202.121.86:9000/api/pets/market
+  // Auction地址： http://13.40.175.75:9000/api/pets/auction
+  // Market地址： http://44.202.121.86:9000/api/pets/market
 
   // 获取正在拍卖的宠物信息
   useEffect(() => {
@@ -224,125 +231,155 @@ export default function History() {
 
   // 有 Auctions 时
 
-    return (
-      <ThemeProvider theme={defaultTheme}>
-        <CssBaseline />
-        <Container maxWidth="lg">
-          <Header title="CyberPet" sections={sections} />
-          <main>
+  return (
+    <ThemeProvider theme={defaultTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg">
+        <Header title="CyberPet" sections={sections} />
+        <main>
 
-            <Grid container spacing={5} sx={{ mt: 3 }}>
+          <Grid container spacing={5} sx={{ mt: 3 }}>
 
-              {/* 侧边栏显示卡 */}
-              <Grid item xs={12} md={3}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
-                  <Typography variant="h6" gutterBottom>
-                    {sidebar.title}
-                  </Typography>
-                  <Typography>{sidebar.description}</Typography>
-                </Paper>
+            {/* 侧边栏显示卡 */}
+            <Grid item xs={12} md={3}>
+              <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
+                <Typography variant="h6" gutterBottom>
+                  {sidebar.title}
+                </Typography>
+                <Typography>{sidebar.description}</Typography>
+              </Paper>
 
-                {/* 宠物等级选择卡 */}
+              {/* 宠物等级选择卡 */}
+              <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
+                Pet Class
+              </Typography>
+
+              <FormGroup>
+                <FormControlLabel control={<Checkbox checked={showClass1} onChange={(e) => classChange(e, setShowClass1)} />} label="Class 1 : Initial" />
+                <FormControlLabel control={<Checkbox checked={showClass2} onChange={(e) => classChange(e, setShowClass2)} />} label="Class 2 : Mature" />
+                <FormControlLabel control={<Checkbox checked={showClass3} onChange={(e) => classChange(e, setShowClass3)} />} label="Class 3 : Ultimate" />
+              </FormGroup>
+
+              {/* 价格选项卡 */}
+              <FormControl>
                 <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                  Pet Class
+                  Pet Price
                 </Typography>
 
-                <FormGroup>
-                  <FormControlLabel control={<Checkbox checked={showClass1} onChange={(e) => classChange(e, setShowClass1)} />} label="Class 1 : Initial" />
-                  <FormControlLabel control={<Checkbox checked={showClass2} onChange={(e) => classChange(e, setShowClass2)} />} label="Class 2 : Mature" />
-                  <FormControlLabel control={<Checkbox checked={showClass3} onChange={(e) => classChange(e, setShowClass3)} />} label="Class 3 : Ultimate" />
-                </FormGroup>
+                <Box
+                  component="form"
+                  sx={{
+                    display: 'flex',        // 将Box的显示设置为flex布局
+                    justifyContent: 'space-between', // 使元素平均分布在Box中
+                    '& > :not(style)': { m: 1, width: '10ch' }, // 调整TextField的宽度以适应Box
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-min"
+                    label="Min"
+                    variant="outlined"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)} />
+                  <TextField
+                    id="outlined-max"
+                    label="Max"
+                    variant="outlined"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)} />
+                  <Stack direction="row" spacing={1}>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPrice} />
+                    </IconButton>
+                  </Stack>
+                </Box>
 
-                {/* 价格选项卡 */}
-                <FormControl>
-                  <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                    Price
-                  </Typography>
+                <RadioGroup
+                  name="price-order"
+                  value={priceOrder}
+                  onChange={priceOrderChange}
+                >
+                  <FormControlLabel value="none" control={<Radio />} label="None" />
+                  <FormControlLabel value="highToLow" control={<Radio />} label="From highest to lowest" />
+                  <FormControlLabel value="lowToHigh" control={<Radio />} label="From lowest to highest" />
+                </RadioGroup>
+              </FormControl>
 
-                  <Box
-                    component="form"
-                    sx={{
-                      display: 'flex',        // 将Box的显示设置为flex布局
-                      justifyContent: 'space-between', // 使元素平均分布在Box中
-                      '& > :not(style)': { m: 1, width: '10ch' }, // 调整TextField的宽度以适应Box
-                    }}
-                    noValidate
-                    autoComplete="off"
-                  >
-                    <TextField
-                      id="outlined-min"
-                      label="Min"
-                      variant="outlined"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)} />
-                    <TextField
-                      id="outlined-max"
-                      label="Max"
-                      variant="outlined"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)} />
-                    <Stack direction="row" spacing={1}>
-                      <IconButton >
-                        <DeleteIcon variant="contained" onClick={clearPrice} />
-                      </IconButton>
-                    </Stack>
-                  </Box>
+              {/* 名称搜索卡 */}
+              <FormControl>
+                <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
+                  Pet Name
+                </Typography>
 
-                  <RadioGroup
-                    name="price-order"
-                    value={priceOrder}
-                    onChange={priceOrderChange}
-                  >
-                    <FormControlLabel value="none" control={<Radio />} label="None" />
-                    <FormControlLabel value="highToLow" control={<Radio />} label="From highest to lowest" />
-                    <FormControlLabel value="lowToHigh" control={<Radio />} label="From lowest to highest" />
-                  </RadioGroup>
-                </FormControl>
-              </Grid>
-
-              {/* 商品展示卡 */}
-              <Grid item xs={12} md={9} container spacing={4} justifyContent="center">  {/* Adjust md value to change the width of the product grid */}
-                {filteredProducts.map(product => (
-                  <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
-                    <SoldCard
-                      image={product.image}
-                      title={product.title}
-                      petclass={product.petclass}
-                      attribute={product.attribute}
-                      description={product.description}
-
-                      type={product.type}
-                      seller={product.seller}
-                      buyer={product.buyer}
-
-                      highestBid={product.highestBid}
-                      highestBidder={product.highestBidder}
-                      startTime={product.startTime}
-                      endTime={product.endTime}
-                      //startPrice={startPrice}
-                      
-                      price={`${product.price} ETH`}
-                      prebid={product.prebid}
-                      states={product.states}
-                      deadline={product.deadline}
-
-                      alt={product.alt}
-                      tokenId={product.tokenId}
-                      petAuction={petAuction}
-                      web3={web3}
-                    //account={account}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
+                <Box
+                  component="form"
+                  sx={{
+                    display: 'flex',        // 将Box的显示设置为flex布局
+                    justifyContent: 'space-between', // 使元素平均分布在Box中
+                    '& > :not(style)': { m: 1, width: '20ch' }, // 调整TextField的宽度以适应Box
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-min"
+                    label="Pet name"
+                    variant="outlined"
+                    value={petNameFilter}
+                    onChange={(e) => setPetNameFilter(e.target.value)} />
+                  <Stack direction="row" spacing={1}>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPetName} />
+                    </IconButton>
+                  </Stack>
+                </Box>
+              </FormControl>
             </Grid>
-          </main>
-        </Container>
-        <Footer
-          title="Footer"
-          description="Hope you can enjony CyberPet!"
-        />
-      </ThemeProvider>
-    );
+
+            {/* 商品展示卡 */}
+            <Grid item xs={12} md={9} container spacing={4} justifyContent="center">  {/* Adjust md value to change the width of the product grid */}
+              {filteredProducts.map(product => (
+                <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
+                  <SoldCard
+                    image={product.image}
+                    title={product.title}
+                    petclass={product.petclass}
+                    attribute={product.attribute}
+                    description={product.description}
+
+                    type={product.type}
+                    seller={product.seller}
+                    buyer={product.buyer}
+
+                    highestBid={product.highestBid}
+                    highestBidder={product.highestBidder}
+                    startTime={product.startTime}
+                    endTime={product.endTime}
+                    //startPrice={startPrice}
+
+                    price={`${product.price} ETH`}
+                    prebid={product.prebid}
+                    states={product.states}
+                    deadline={product.deadline}
+
+                    alt={product.alt}
+                    tokenId={product.tokenId}
+                    petAuction={petAuction}
+                    web3={web3}
+                  //account={account}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+        </main>
+      </Container>
+      <Footer
+        title="Footer"
+        description="Hope you can enjony CyberPet!"
+      />
+    </ThemeProvider>
+  );
 }
 

@@ -110,6 +110,12 @@ export default function AuctionMarket() {
     setMaxPrice('');
   };
 
+  const [petNameFilter, setPetNameFilter] = useState('');
+
+  const clearPetName = () => {
+    setPetNameFilter(''); // 只清除宠物名称输入
+  };
+
   const filteredProducts = products.filter(product => {
     const classCheck = (showClass1 && product.petclass === "1") ||  // 宠物等级过滤器
       (showClass2 && product.petclass === "2") ||
@@ -120,7 +126,8 @@ export default function AuctionMarket() {
       (!showOnSale && !showSold);
     const priceCheck = (minPrice === '' || parseFloat(product.price) >= parseFloat(minPrice)) &&  // 价格过滤器
       (maxPrice === '' || parseFloat(product.price) <= parseFloat(maxPrice));
-    return classCheck && stateCheck && priceCheck;
+    const nameCheck = product.title.toLowerCase().includes(petNameFilter.toLowerCase()); // 宠物名称过滤
+    return classCheck && stateCheck && priceCheck && nameCheck;
   }).sort((a, b) => {
     if (priceOrder === 'highToLow') {    // 价格排序调整
       return b.price - a.price;
@@ -133,59 +140,59 @@ export default function AuctionMarket() {
 
   // 获取正在拍卖的宠物信息
   useEffect(() => {
-    
+
     const fetchAuctions = async () => {
       if (!petAuction || !web3 || !petNFT) {
         console.log("Waiting for initialization...");
         return;
       }
-        try {
-          console.log('Contract address:', petAuction.options.address);
-          console.log('Calling listActiveAuctionsInfo...');
-          const data = await petAuction.methods.listActiveAuctionsInfo().call();
-          console.log('Received raw data:', data);
-    
-          const tokenIds = data[0];
-          const auctionsBrief = data[1];
-          const petsBrief = data[2];
-          const bidsHistory = data[3];
-    
-          console.log('Token IDs:', tokenIds);
-          console.log('Auction Details:', auctionsBrief);
-          console.log('Pet Details:', petsBrief);
-          
-          /* global BigInt */
-          //const [tokenIds, auctionsBrief, petsBrief] = data;
-          const newProducts = tokenIds.map((tokenId, index) => ({
-            id: tokenId.toString(),
-            image: petsBrief[index].url,
-            title: petsBrief[index].name,
-            petclass: petsBrief[index].level.toString(),
-            attribute: [petsBrief[index].appearance + ', ' + petsBrief[index].character] ,
-            description: petsBrief[index].description,
-            price: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'),
-            prebid: bidsHistory[index].map(bid => web3.utils.fromWei(bid.toString(), 'ether')),
-            states: auctionsBrief[index].active ? "1" : "0",
-            deadline: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(),
-            alt: "Product " + tokenId,
+      try {
+        console.log('Contract address:', petAuction.options.address);
+        console.log('Calling listActiveAuctionsInfo...');
+        const data = await petAuction.methods.listActiveAuctionsInfo().call();
+        console.log('Received raw data:', data);
 
-            seller:auctionsBrief[index].seller,
-            startTime: new Date(Number(auctionsBrief[index].startTime) * 1000).toLocaleString(), // Auction start time in UNIX timestamp.
-            endTime: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(), // Auction end time in UNIX timestamp.
-            highestBid: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'), // Current highest bid amount.
-            highestBidder: auctionsBrief[index].highestBidder, // Address of the current highest bidder.
-            reservePrice: web3.utils.fromWei(auctionsBrief[index].reservePrice.toString(), 'ether'),
-            active: auctionsBrief[index].active.toString(),
-          }));
-          setProducts(newProducts);
-        } catch (error) {
-          console.error('Error fetching auctions:', error.message, error.stack);
-        }
-      
+        const tokenIds = data[0];
+        const auctionsBrief = data[1];
+        const petsBrief = data[2];
+        const bidsHistory = data[3];
+
+        console.log('Token IDs:', tokenIds);
+        console.log('Auction Details:', auctionsBrief);
+        console.log('Pet Details:', petsBrief);
+
+        /* global BigInt */
+        //const [tokenIds, auctionsBrief, petsBrief] = data;
+        const newProducts = tokenIds.map((tokenId, index) => ({
+          id: tokenId.toString(),
+          image: petsBrief[index].url,
+          title: petsBrief[index].name,
+          petclass: petsBrief[index].level.toString(),
+          attribute: [petsBrief[index].appearance + ', ' + petsBrief[index].character],
+          description: petsBrief[index].description,
+          price: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'),
+          prebid: bidsHistory[index].map(bid => web3.utils.fromWei(bid.toString(), 'ether')),
+          states: auctionsBrief[index].active ? "1" : "0",
+          deadline: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(),
+          alt: "Product " + tokenId,
+
+          seller: auctionsBrief[index].seller,
+          startTime: new Date(Number(auctionsBrief[index].startTime) * 1000).toLocaleString(), // Auction start time in UNIX timestamp.
+          endTime: new Date(Number(auctionsBrief[index].endTime) * 1000).toLocaleString(), // Auction end time in UNIX timestamp.
+          highestBid: web3.utils.fromWei(auctionsBrief[index].highestBid.toString(), 'ether'), // Current highest bid amount.
+          highestBidder: auctionsBrief[index].highestBidder, // Address of the current highest bidder.
+          reservePrice: web3.utils.fromWei(auctionsBrief[index].reservePrice.toString(), 'ether'),
+          active: auctionsBrief[index].active.toString(),
+        }));
+        setProducts(newProducts);
+      } catch (error) {
+        console.error('Error fetching auctions:', error.message, error.stack);
+      }
+
     };
     console.log(petAuction)
     fetchAuctions();
-    
+
     const interval = setInterval(fetchAuctions, 5000);  // 每5秒刷新数据
 
     return () => clearInterval(interval);
@@ -195,82 +202,112 @@ export default function AuctionMarket() {
 
 
 
-    return (
-      <ThemeProvider theme={defaultTheme}>
-        <CssBaseline />
-        <Container maxWidth="lg">
-          <Header title="CyberPet" sections={sections} />
-          <main>
+  return (
+    <ThemeProvider theme={defaultTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg">
+        <Header title="CyberPet" sections={sections} />
+        <main>
 
-            <Grid container spacing={5} sx={{ mt: 3 }}>
+          <Grid container spacing={5} sx={{ mt: 3 }}>
 
-              {/* 侧边栏显示卡 */}
-              <Grid item xs={12} md={3}>
-                <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
-                  <Typography variant="h6" gutterBottom>
-                    {sidebar.title}
-                  </Typography>
-                  <Typography>{sidebar.description}</Typography>
-                </Paper>
+            {/* 侧边栏显示卡 */}
+            <Grid item xs={12} md={3}>
+              <Paper elevation={0} sx={{ p: 2, bgcolor: 'grey.200' }}>
+                <Typography variant="h6" gutterBottom>
+                  {sidebar.title}
+                </Typography>
+                <Typography>{sidebar.description}</Typography>
+              </Paper>
 
-                {/* 宠物等级选择卡 */}
+              {/* 宠物等级选择卡 */}
+              <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
+                Pet Class
+              </Typography>
+
+              <FormGroup>
+                <FormControlLabel control={<Checkbox checked={showClass1} onChange={(e) => classChange(e, setShowClass1)} />} label="Class 1 : Initial" />
+                <FormControlLabel control={<Checkbox checked={showClass2} onChange={(e) => classChange(e, setShowClass2)} />} label="Class 2 : Mature" />
+                <FormControlLabel control={<Checkbox checked={showClass3} onChange={(e) => classChange(e, setShowClass3)} />} label="Class 3 : Ultimate" />
+              </FormGroup>
+
+              {/* 价格选项卡 */}
+              <FormControl>
                 <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                  Pet Class
+                  Pet Price
                 </Typography>
 
-                <FormGroup>
-                  <FormControlLabel control={<Checkbox checked={showClass1} onChange={(e) => classChange(e, setShowClass1)} />} label="Class 1 : Initial" />
-                  <FormControlLabel control={<Checkbox checked={showClass2} onChange={(e) => classChange(e, setShowClass2)} />} label="Class 2 : Mature" />
-                  <FormControlLabel control={<Checkbox checked={showClass3} onChange={(e) => classChange(e, setShowClass3)} />} label="Class 3 : Ultimate" />
-                </FormGroup>
+                <Box
+                  component="form"
+                  sx={{
+                    display: 'flex',        // 将Box的显示设置为flex布局
+                    justifyContent: 'space-between', // 使元素平均分布在Box中
+                    '& > :not(style)': { m: 1, width: '10ch' }, // 调整TextField的宽度以适应Box
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-min"
+                    label="Min"
+                    variant="outlined"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)} />
+                  <TextField
+                    id="outlined-max"
+                    label="Max"
+                    variant="outlined"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)} />
+                  <Stack direction="row" spacing={1}>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPrice} />
+                    </IconButton>
+                  </Stack>
+                </Box>
 
-                {/* 价格选项卡 */}
-                <FormControl>
-                  <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                    Price
-                  </Typography>
+                <RadioGroup
+                  name="price-order"
+                  value={priceOrder}
+                  onChange={priceOrderChange}
+                >
+                  <FormControlLabel value="none" control={<Radio />} label="None" />
+                  <FormControlLabel value="highToLow" control={<Radio />} label="From highest to lowest" />
+                  <FormControlLabel value="lowToHigh" control={<Radio />} label="From lowest to highest" />
+                </RadioGroup>
+              </FormControl>
 
-                  <Box
-                    component="form"
-                    sx={{
-                      display: 'flex',        // 将Box的显示设置为flex布局
-                      justifyContent: 'space-between', // 使元素平均分布在Box中
-                      '& > :not(style)': { m: 1, width: '10ch' }, // 调整TextField的宽度以适应Box
-                    }}
-                    noValidate
-                    autoComplete="off"
-                  >
-                    <TextField
-                      id="outlined-min"
-                      label="Min"
-                      variant="outlined"
-                      value={minPrice}
-                      onChange={(e) => setMinPrice(e.target.value)} />
-                    <TextField
-                      id="outlined-max"
-                      label="Max"
-                      variant="outlined"
-                      value={maxPrice}
-                      onChange={(e) => setMaxPrice(e.target.value)} />
-                    <Stack direction="row" spacing={1}>
-                      <IconButton >
-                        <DeleteIcon variant="contained" onClick={clearPrice} />
-                      </IconButton>
-                    </Stack>
-                  </Box>
+              {/* 名称搜索卡 */}
+              <FormControl>
+                <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
+                  Pet Name
+                </Typography>
 
-                  <RadioGroup
-                    name="price-order"
-                    value={priceOrder}
-                    onChange={priceOrderChange}
-                  >
-                    <FormControlLabel value="none" control={<Radio />} label="None" />
-                    <FormControlLabel value="highToLow" control={<Radio />} label="From highest to lowest" />
-                    <FormControlLabel value="lowToHigh" control={<Radio />} label="From lowest to highest" />
-                  </RadioGroup>
-                </FormControl>
+                <Box
+                  component="form"
+                  sx={{
+                    display: 'flex',        // 将Box的显示设置为flex布局
+                    justifyContent: 'space-between', // 使元素平均分布在Box中
+                    '& > :not(style)': { m: 1, width: '20ch' }, // 调整TextField的宽度以适应Box
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-min"
+                    label="Pet name"
+                    variant="outlined"
+                    value={petNameFilter}
+                    onChange={(e) => setPetNameFilter(e.target.value)} />
+                  <Stack direction="row" spacing={1}>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPetName} />
+                    </IconButton>
+                  </Stack>
+                </Box>
+              </FormControl>
 
-                {/* 状态选项卡
+              {/* 状态选项卡
                 <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
                   State
                 </Typography>
@@ -280,7 +317,7 @@ export default function AuctionMarket() {
                   <FormControlLabel control={<Checkbox checked={showSold} onChange={(e) => stateChange(e, setShowSold)} />} label="Sold" />
                 </FormGroup> */}
 
-                {/* <RadioGroup
+              {/* <RadioGroup
                   name="viewState"
                   value={viewState}
                   onChange={(e) => setViewState(e.target.value)}
@@ -288,41 +325,41 @@ export default function AuctionMarket() {
                     <FormControlLabel value="onSale" control={<Radio />} label="On-Sale" />
                     <FormControlLabel value="sold" control={<Radio />} label="Sold" />
                 </RadioGroup> */}
-  
 
-              </Grid>
 
-              {/* 商品展示卡 */}
-              <Grid item xs={12} md={9} container spacing={4} justifyContent="center">  {/* Adjust md value to change the width of the product grid */}
-                {filteredProducts.map(product => (
-                  <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
-                    <SellCard
-                      image={product.image}
-                      title={product.title}
-                      petclass={product.petclass}
-                      attribute={product.attribute}
-                      description={product.description}
-                      price={`${Math.max(product.highestBid, product.reservePrice)} ETH`}
-                      prebid={product.prebid}
-                      states={product.states}
-                      deadline={product.deadline}
-                      alt={product.alt}
-                      tokenId={product.id}
-                      petAuction={petAuction}
-                      web3={web3}
-                    //account={account}
-                    />
-                  </Grid>
-                ))}
-              </Grid>
             </Grid>
-          </main>
-        </Container>
-        <Footer
-          title="Footer"
-          description="Hope you can enjony CyberPet!"
-        />
-      </ThemeProvider>
-    );
+
+            {/* 商品展示卡 */}
+            <Grid item xs={12} md={9} container spacing={4} justifyContent="center">  {/* Adjust md value to change the width of the product grid */}
+              {filteredProducts.map(product => (
+                <Grid item xs={12} sm={6} md={4} key={product.id}>  {/* You can adjust the sizes here to fit more or fewer products per row */}
+                  <SellCard
+                    image={product.image}
+                    title={product.title}
+                    petclass={product.petclass}
+                    attribute={product.attribute}
+                    description={product.description}
+                    price={`${Math.max(product.highestBid, product.reservePrice)} ETH`}
+                    prebid={product.prebid}
+                    states={product.states}
+                    deadline={product.deadline}
+                    alt={product.alt}
+                    tokenId={product.id}
+                    petAuction={petAuction}
+                    web3={web3}
+                  //account={account}
+                  />
+                </Grid>
+              ))}
+            </Grid>
+          </Grid>
+        </main>
+      </Container>
+      <Footer
+        title="Footer"
+        description="Hope you can enjony CyberPet!"
+      />
+    </ThemeProvider>
+  );
 }
 

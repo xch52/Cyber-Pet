@@ -33,7 +33,7 @@ contract PetMarket is ReentrancyGuard {
     function listPetForSale(uint256 tokenId, uint256 price) external {
         require(petNFT.ownerOf(tokenId) == msg.sender, "You must own the pet to list it for sale");
         require(petNFT.getApproved(tokenId) == address(this), "Market must be approved to transfer pet");
-
+        petNFT.transferFrom(msg.sender, address(this), tokenId); // Transfer the NFT to the contract for escrow.
         petSales[tokenId] = Sale({
             seller: msg.sender,
             price: price,
@@ -51,7 +51,7 @@ contract PetMarket is ReentrancyGuard {
 
         petSales[tokenId].isActive = false;
         activeSales.remove(tokenId);
-
+        petNFT.transferFrom(address(this), msg.sender, tokenId);
         emit SaleCancelled(tokenId);
     }
 
@@ -63,7 +63,7 @@ contract PetMarket is ReentrancyGuard {
 
         sale.isActive = false;
         activeSales.remove(tokenId);
-        petNFT.safeTransferFrom(sale.seller, msg.sender, tokenId);
+        petNFT.transferFrom(address(this), msg.sender, tokenId);
         payable(sale.seller).transfer(msg.value);
 
         emit PetSold(tokenId, msg.sender, sale.price, block.timestamp);
