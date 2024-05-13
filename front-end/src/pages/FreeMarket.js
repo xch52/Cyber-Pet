@@ -107,6 +107,11 @@ export default function FreeMarket() {
     setMaxPrice('');
   };
 
+  const [petNameFilter, setPetNameFilter] = useState('');
+
+  const clearPetName = () => {
+    setPetNameFilter(''); // 只清除宠物名称输入
+  };
 
   const filteredProducts = products.filter(product => {
     const classCheck = (showClass1 && product.petclass === "1") ||  // 宠物等级过滤器
@@ -118,7 +123,8 @@ export default function FreeMarket() {
       (!showOnSale && !showSold);
     const priceCheck = (minPrice === '' || parseFloat(product.price) >= parseFloat(minPrice)) &&  // 价格过滤器
       (maxPrice === '' || parseFloat(product.price) <= parseFloat(maxPrice));
-    return classCheck && stateCheck && priceCheck;
+    const nameCheck = product.title.toLowerCase().includes(petNameFilter.toLowerCase()); // 宠物名称过滤
+    return classCheck && stateCheck && priceCheck && nameCheck;
   }).sort((a, b) => {
     if (priceOrder === 'highToLow') {    // 价格排序调整
       return b.price - a.price;
@@ -138,7 +144,7 @@ export default function FreeMarket() {
           const result = await petMarket.methods.listActiveSalesInfo().call();
           const tokenIds = result[0];
           const salesData = result[1];
-    
+
           // 遍历 tokenIds，使用对应的销售数据
           const productsTemp = await Promise.all(tokenIds.map(async (tokenId, index) => {
             // 获取每个 tokenId 对应的宠物属性
@@ -157,20 +163,20 @@ export default function FreeMarket() {
               alt: `Pet ${attributes.name}`,
             };
           }));
-    
+
           setProducts(productsTemp);
         } catch (error) {
           console.error("Failed to fetch active sales:", error);
         }
       }
     };
-    
+
 
     fetchActiveSales();
 
     const interval = setInterval(fetchActiveSales, 5000);  // 每5秒刷新数据
 
-    return () => clearInterval(interval); 
+    return () => clearInterval(interval);
 
   }, [petMarket, petNFT, web3]);
 
@@ -205,7 +211,7 @@ export default function FreeMarket() {
               {/* 价格选项卡 */}
               <FormControl>
                 <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
-                  Price
+                  Pet Price
                 </Typography>
 
                 <Box
@@ -231,9 +237,9 @@ export default function FreeMarket() {
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)} />
                   <Stack direction="row" spacing={1}>
-                  <IconButton >
-                       <DeleteIcon variant="contained" onClick={clearPrice}/>
-                  </IconButton>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPrice} />
+                    </IconButton>
                   </Stack>
                 </Box>
 
@@ -248,6 +254,35 @@ export default function FreeMarket() {
                 </RadioGroup>
               </FormControl>
 
+              {/* 名称搜索卡 */}
+              <FormControl>
+                <Typography variant="h5" gutterBottom sx={{ mt: 3 }} color="secondary">
+                  Pet Name
+                </Typography>
+
+                <Box
+                  component="form"
+                  sx={{
+                    display: 'flex',        // 将Box的显示设置为flex布局
+                    justifyContent: 'space-between', // 使元素平均分布在Box中
+                    '& > :not(style)': { m: 1, width: '20ch' }, // 调整TextField的宽度以适应Box
+                  }}
+                  noValidate
+                  autoComplete="off"
+                >
+                  <TextField
+                    id="outlined-min"
+                    label="Pet name"
+                    variant="outlined"
+                    value={petNameFilter}
+                    onChange={(e) => setPetNameFilter(e.target.value)} />
+                  <Stack direction="row" spacing={1}>
+                    <IconButton >
+                      <DeleteIcon variant="contained" onClick={clearPetName} />
+                    </IconButton>
+                  </Stack>
+                </Box>
+              </FormControl>
 
             </Grid>
 

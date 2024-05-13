@@ -37,7 +37,7 @@ const mainFeaturedPost = {
 const featuredPosts = [
   {
     title: 'Amazing market',
-    date: 'Nov 12',
+    date: 'May 20',
     description:
       'In this market, you can trade your pets freely. When you find a pet you love, you can buy it without hesitation. You can also sell your pets according to your own preferences.',
     image: HomeExample1,
@@ -45,9 +45,9 @@ const featuredPosts = [
   },
   {
     title: 'Fascinating gashapon',
-    date: 'Nov 11',
+    date: 'May 20',
     description:
-      'In the gashapon, you can use Ether to buy an opportunity to incubate your own new pet. Trust me, it is definitely a fun and surprising journey.',
+      'In the gashapon, you can spend Ether for an opportunity to incubate your own new pet. Trust me, it is definitely a fun and surprising journey.',
     image: HomeExample2,
     imageLabel: 'Image Text',
   },
