@@ -59,18 +59,21 @@ contract PetNFT is ERC721URIStorage, Ownable {
         });
         _safeMint(to, tokenId); // Mint the token.
         _setTokenURI(tokenId, uri); // Set the URI for the token.
-        petsByLevel[level].push(tokenId); // Add the token ID to the array for the corresponding level.
+        if(to == lotteryAddress){
+            petsByLevel[level].push(tokenId); // Add the token ID to the array for the corresponding level.
+        }
         emit PetMinted(tokenId, to, level, name, appearance, character, description, url, uri);
     }
 
     // Function to retrieve an array of pet token IDs by their level.
     function getPetsByLevel(uint256 level) public view returns (uint256[] memory) {
         require(level >= 1 && level <= 3, "Invalid pet level, must be between 1 and 3.");
-        return petsByLevel[level];
+        return (petsByLevel[level]);
     }
 
     // Function to get attributes of a specific pet by token ID.
     function getPetAttributes(uint256 tokenId) public view returns (PetAttributes memory) {
+
         return petDetails[tokenId];
     }
     

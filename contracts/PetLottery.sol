@@ -1,26 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Importing required interfaces and base classes from Chainlink and the custom PetNFT contract
-import {IVRFCoordinatorV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
-import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
-import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-import "./PetNFT.sol";
+// Importing required interfaces and base classes from ReentrancyGuard and the custom PetNFT contract
+import "./PetNFT.sol"; // Import the PetNFT contract.
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // Import ReentrancyGuard for preventing re-entrancy attacks.
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; // Import EnumerableSet for managing collections of unique elements.
 
 // Define the main contract which inherits from Chainlink's VRFConsumerBaseV2Plus for RNG
-contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
-    IVRFCoordinatorV2Plus COORDINATOR;
+contract PetLottery is ReentrancyGuard {
 
-    // Variables to store subscription and Chainlink VRF related information
-    uint256 s_subscriptionId;
-    bytes32 s_keyHash = 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae;
-    uint32 s_callbackGasLimit = 100000;
-    uint16 s_requestConfirmations = 3;
-    address VRFCoordinator = 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B;
-
+    address payable public ownerself;
     // Variables to handle lottery mechanics
-    uint256 public lotteryFee = 10000 wei;
-    PetNFT public petNFTContract;
+    uint256 public lotteryFee = 0.002 ether;
+    PetNFT public petNFT;
+    uint256 requestId;
+
     mapping(uint256 => address) private requestToSender;
     mapping(uint256 => uint256) private requestToAmount;
 
@@ -31,14 +25,9 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
     event NFTReceived(address operator, address from, uint256 tokenId, bytes data);
 
     // Constructor to initialize the contract with Chainlink VRF settings and the PetNFT contract address
-    constructor(
-        uint256 subscriptionId,
-        address petNFTContractAddress
-    )
-        VRFConsumerBaseV2Plus(VRFCoordinator) {
-        COORDINATOR = IVRFCoordinatorV2Plus(VRFCoordinator);
-        s_subscriptionId = subscriptionId;
-        petNFTContract = PetNFT(petNFTContractAddress);
+    constructor (address petNFTContractAddress) {
+        petNFT = PetNFT(petNFTContractAddress);
+        ownerself = payable(msg.sender); 
     }
 
     // ERC721 compliance for receiving NFTs
@@ -53,30 +42,22 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
     }
     
     // Function to request random numbers from Chainlink VRF
-    function requestRandomWords(uint256 amount) public payable returns (uint256 requestId) {
-        require(msg.value == lotteryFee * amount, "sent ether does not match the cost");
-        bool payWithNativeToken = false; 
-        requestId = COORDINATOR.requestRandomWords(
-            VRFV2PlusClient.RandomWordsRequest({
-                keyHash: s_keyHash,
-                subId: s_subscriptionId,
-                requestConfirmations: s_requestConfirmations,
-                callbackGasLimit: s_callbackGasLimit,
-                numWords: uint32(amount),
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: payWithNativeToken})
-                )
-            })
-        );
+    function requestRandomWords(uint256 amount) public payable returns (uint256[] memory, PetNFT.PetAttributes[] memory) {
+        require(msg.value == lotteryFee * amount, "Incorrect lottery fee.");
+        ownerself.transfer(msg.value);
 
-        requestToSender[requestId] = msg.sender;
+        requestToSender[++requestId] = msg.sender;
         requestToAmount[requestId] = amount;
         emit LotteryRequested(msg.sender, requestId, amount);
-        return requestId;
+        uint256[] memory randomWords = new uint256[](amount);
+        for(uint256 i = 0; i < amount; ++i) {
+            randomWords[i] = uint256(blockhash(block.number - i - 1));
+        }
+        return fulfillRandomWords(randomWords);
     }
 
     // Internal function overridden to handle the randomness response
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
+    function fulfillRandomWords(uint256[] memory randomWords) internal returns (uint256[] memory, PetNFT.PetAttributes[] memory){
         uint256 amount = requestToAmount[requestId];
         address player = requestToSender[requestId];
         uint256[] memory tokenIds = new uint256[](amount);
@@ -106,17 +87,20 @@ contract PetLotteryV2Plus is VRFConsumerBaseV2Plus {
 
         // Assign pets based on the determined levels
         for (uint256 i = 0; i < amount; i++) {
-            require(petNFTContract.getPetsByLevel(levels[i]).length > 0, "Not enough pets");
-            uint256 petIndex = randomWords[i] % petNFTContract.getPetsByLevel(levels[i]).length;
-            uint256 tokenId = petNFTContract.removePetFromLevel(levels[i], petIndex);
+            require(petNFT.getPetsByLevel(levels[i]).length > 0, "Not enough pets");
+            uint256 petIndex = randomWords[i] % petNFT.getPetsByLevel(levels[i]).length;
+            uint256 tokenId = petNFT.removePetFromLevel(levels[i], petIndex);
             tokenIds[i] = tokenId;
-            petNFTContract.transferFrom(address(this), player, tokenId);
+            petNFT.transferFrom(address(this), player, tokenId);
         }
 
+        PetNFT.PetAttributes[] memory petLotteryAttributes = new PetNFT.PetAttributes[](tokenIds.length);
+        for (uint i = 0; i < tokenIds.length; i++) {
+            petLotteryAttributes[i] = petNFT.getPetAttributes(tokenIds[i]);
+        }
+        
         emit LotteryFulfilled(player, requestId, tokenIds, block.timestamp);
+        return (tokenIds, petLotteryAttributes);
     }
 
-    // Fallback and receive functions to handle direct Ether transactions
-    receive() external payable {}
-    fallback() external payable {}
 }

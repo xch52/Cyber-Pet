@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; // Import Enum
 contract PetAuction is ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet; // Enable EnumerableSet methods for uint sets.
     EnumerableSet.UintSet private activeAuctions; // Set of active auction token IDs.
+    mapping(uint256 => uint256[]) public bidHistory; // Record Bid History.
 
     PetNFT public petNFT; // Instance of the PetNFT contract.
 
@@ -45,6 +46,8 @@ contract PetAuction is ReentrancyGuard {
         require(petNFT.getApproved(tokenId) == address(this), "Contract needs to be approved to transfer NFT");
         require(reservePrice > 0, "Reserve price must be more than 0");
 
+        delete bidHistory[tokenId]; // Clear History.
+
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + auctionDuration;
 
@@ -76,6 +79,7 @@ contract PetAuction is ReentrancyGuard {
         address previousBidder = auction.highestBidder;
         uint256 previousBid = auction.highestBid;
 
+        bidHistory[tokenId].push(msg.value); // Record Bid placed.
         auction.highestBid = msg.value;
         auction.highestBidder = msg.sender;
 
@@ -88,6 +92,10 @@ contract PetAuction is ReentrancyGuard {
         }
 
         emit BidPlaced(tokenId, msg.sender, msg.value);
+    }
+
+    function getBidHistory(uint256 tokenId) public view returns (uint256[] memory) {
+        return bidHistory[tokenId];
     }
 
     // refund manually
@@ -140,15 +148,18 @@ contract PetAuction is ReentrancyGuard {
     }
 
     // Return all active auctions information and pets information.
-    function listActiveAuctionsInfo() public view returns (uint256[] memory, Auction[] memory, PetNFT.PetAttributes[] memory) {
+    function listActiveAuctionsInfo() public view returns (uint256[] memory, Auction[] memory, PetNFT.PetAttributes[] memory, uint256[][] memory) {
         uint256[] memory tokenIds = activeAuctions.values();
         Auction[] memory auctionsBrief = new Auction[](tokenIds.length);
         PetNFT.PetAttributes[] memory petsBrief = new PetNFT.PetAttributes[](tokenIds.length);
+        uint256[][] memory bidsHistory = new uint256[][](tokenIds.length);
+
         for (uint i = 0; i < tokenIds.length; i++) {
             auctionsBrief[i] = auctions[tokenIds[i]];
             petsBrief[i] = petNFT.getPetAttributes(tokenIds[i]);
+            bidsHistory[i] = bidHistory[tokenIds[i]];
         }
-        return (tokenIds, auctionsBrief, petsBrief);
+        return (tokenIds, auctionsBrief, petsBrief, bidsHistory);
     }
 
     function getAllAuctionsDetails() public view returns (Auction[] memory) {
