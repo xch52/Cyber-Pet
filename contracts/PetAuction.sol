@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PetNFT.sol"; // Import the PetNFT contract.
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // Import ReentrancyGuard for preventing re-entrancy attacks.
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; // Import EnumerableSet for managing collections of unique elements.
+import "./PetNFT.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; 
 
-// Auction contract for NFTs, providing functionalities for listing, bidding, and concluding auctions.
 contract PetAuction is ReentrancyGuard {
-    using EnumerableSet for EnumerableSet.UintSet; // Enable EnumerableSet methods for uint sets.
-    EnumerableSet.UintSet private activeAuctions; // Set of active auction token IDs.
-    mapping(uint256 => uint256[]) public bidHistory; // Record Bid History.
 
-    PetNFT public petNFT; // Instance of the PetNFT contract.
+    using EnumerableSet for EnumerableSet.UintSet; 
+    EnumerableSet.UintSet private activeAuctions; 
+    mapping(uint256 => uint256[]) public bidHistory; 
 
-    // Struct to store details about an auction.
+    PetNFT public petNFT; 
+
     struct Auction {
         address seller; // Address of the pet's seller.
         uint256 tokenId; // Token ID of the pet being auctioned.
@@ -25,9 +24,8 @@ contract PetAuction is ReentrancyGuard {
         bool active; // Flag to check if the auction is active.
     }
 
-    mapping(uint256 => Auction) public auctions; // Mapping from token ID to Auction struct.
+    mapping(uint256 => Auction) public auctions; 
 
-    // Events that emit on actions taken within the contract.
     event AuctionCreated(uint256 indexed tokenId, address seller, uint256 reservePrice, uint256 startTime, uint256 endTime);
     event BidPlaced(uint256 indexed tokenId, address bidder, uint256 amount);
     event AuctionEnded(uint256 indexed tokenId, address winner, uint256 amount, uint256 timestamp, uint256 startTime, uint256 endTime);
@@ -35,7 +33,6 @@ contract PetAuction is ReentrancyGuard {
     event AuctionUpdated(uint256 indexed tokenId, uint256 newReservePrice, uint256 newEndTime);
     event AuctionCancelled(uint256 indexed tokenId);
 
-    // Constructor to set the PetNFT contract address.
     constructor(address _petNFTAddress) {
         petNFT = PetNFT(_petNFTAddress);
     }
@@ -46,8 +43,7 @@ contract PetAuction is ReentrancyGuard {
         require(petNFT.getApproved(tokenId) == address(this), "Contract needs to be approved to transfer NFT");
         require(reservePrice > 0, "Reserve price must be more than 0");
 
-        delete bidHistory[tokenId]; // Clear History.
-
+        delete bidHistory[tokenId];
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + auctionDuration;
 
@@ -62,7 +58,7 @@ contract PetAuction is ReentrancyGuard {
             active: true
         });
         activeAuctions.add(tokenId);
-        petNFT.transferFrom(msg.sender, address(this), tokenId); // Transfer the NFT to the contract for escrow.
+        petNFT.transferFrom(msg.sender, address(this), tokenId); 
         emit AuctionCreated(tokenId, msg.sender, reservePrice, startTime, endTime);
     }
 
@@ -113,7 +109,6 @@ contract PetAuction is ReentrancyGuard {
         Auction storage auction = auctions[tokenId];
         require(auction.active, "Auction is not active");
         require(block.timestamp > auction.endTime, "Auction has not ended yet");
-        // require(msg.sender == auction.seller || msg.sender == auction.highestBidder, "Only seller or highest bidder can end the auction");
 
         auction.active = false;
         if (auction.highestBid >= auction.reservePrice) {
@@ -144,7 +139,7 @@ contract PetAuction is ReentrancyGuard {
 
     // Function to list all active auctions.
     function listActiveAuctions() public view returns (uint256[] memory) {
-        return activeAuctions.values(); // Return an array of all active auction token IDs
+        return activeAuctions.values(); 
     }
 
     // Return all active auctions information and pets information.
@@ -176,7 +171,7 @@ contract PetAuction is ReentrancyGuard {
         return (auctions[tokenId], petNFT.getPetAttributes(tokenId));
     }
 
-    // Provide a function to allow the auction creator to cancel the auction if there are no bids yet.
+    // Function to allow the auction creator to cancel the auction if there are no bids yet.
     function cancelAuction(uint256 tokenId) external {
         Auction storage auction = auctions[tokenId];
         require(msg.sender == auction.seller, "Only the seller can cancel the auction");
