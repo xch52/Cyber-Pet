@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-// Importing required interfaces and base classes from ReentrancyGuard and the custom PetNFT contract
-import "./PetNFT.sol"; // Import the PetNFT contract.
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // Import ReentrancyGuard for preventing re-entrancy attacks.
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; // Import EnumerableSet for managing collections of unique elements.
+import "./PetNFT.sol"; 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-// Define the main contract which inherits from Chainlink's VRFConsumerBaseV2Plus for RNG
 contract PetLottery is ReentrancyGuard {
 
     address payable public ownerself;
-    // Variables to handle lottery mechanics
     uint256 public lotteryFee = 0.002 ether;
     PetNFT public petNFT;
     uint256 requestId;
@@ -18,19 +15,16 @@ contract PetLottery is ReentrancyGuard {
     mapping(uint256 => address) private requestToSender;
     mapping(uint256 => uint256) private requestToAmount;
 
-    // Events for logging activities on the blockchain
     event LotteryRequested(address indexed requester, uint256 requestId, uint256 amount);
     event LotteryFulfilled(address indexed requester, uint256 requestId, uint256[] tokenIds, uint timestamp);
     event HighLevelPetEnsured(address indexed requester, uint256 highLevelTokenId, uint256 replacedTokenId);
     event NFTReceived(address operator, address from, uint256 tokenId, bytes data);
 
-    // Constructor to initialize the contract with Chainlink VRF settings and the PetNFT contract address
     constructor (address petNFTContractAddress) {
         petNFT = PetNFT(petNFTContractAddress);
         ownerself = payable(msg.sender); 
     }
 
-    // ERC721 compliance for receiving NFTs
     function onERC721Received(
         address operator,
         address from,
@@ -40,8 +34,6 @@ contract PetLottery is ReentrancyGuard {
         emit NFTReceived(operator, from, tokenId, data);
         return this.onERC721Received.selector;
     }
-    
-    // Function to request random numbers from Chainlink VRF
     function requestRandomWords(uint256 amount) public payable returns (uint256[] memory, PetNFT.PetAttributes[] memory) {
         require(msg.value == lotteryFee * amount, "Incorrect lottery fee.");
         ownerself.transfer(msg.value);
@@ -56,7 +48,6 @@ contract PetLottery is ReentrancyGuard {
         return fulfillRandomWords(randomWords);
     }
 
-    // Internal function overridden to handle the randomness response
     function fulfillRandomWords(uint256[] memory randomWords) internal returns (uint256[] memory, PetNFT.PetAttributes[] memory){
         uint256 amount = requestToAmount[requestId];
         address player = requestToSender[requestId];

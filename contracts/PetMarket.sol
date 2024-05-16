@@ -1,15 +1,15 @@
 // // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./PetNFT.sol"; // Importing the PetNFT contract for managing NFTs.
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol"; // Using OpenZeppelin's ReentrancyGuard for added security against re-entrancy attacks.
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; // Using EnumerableSet to manage collections of unique elements efficiently.
+import "./PetNFT.sol"; 
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol"; 
 
 contract PetMarket is ReentrancyGuard {
     using EnumerableSet for EnumerableSet.UintSet;
 
-    PetNFT public petNFT; // Instance of the PetNFT contract to interact with NFTs.
-    EnumerableSet.UintSet private activeSales; // Set for tracking active sales.
+    PetNFT public petNFT;
+    EnumerableSet.UintSet private activeSales; 
 
     struct Sale {
         address seller; // Address of the seller.
@@ -17,14 +17,13 @@ contract PetMarket is ReentrancyGuard {
         bool isActive; // Flag to check if the sale is active.
     }
 
-    mapping(uint256 => Sale) public petSales; // Mapping from token ID to sale information.
+    mapping(uint256 => Sale) public petSales;
 
-    // Events for logging activities on the blockchain.
+
     event PetListed(uint256 indexed tokenId, address indexed seller, uint256 price);
     event PetSold(uint256 indexed tokenId, address indexed buyer, uint256 price, uint256 timestamp);
     event SaleCancelled(uint256 indexed tokenId);
 
-    // Constructor to initialize the NFT contract address.
     constructor(address _petNFTAddress) {
         petNFT = PetNFT(_petNFTAddress);
     }
@@ -33,7 +32,7 @@ contract PetMarket is ReentrancyGuard {
     function listPetForSale(uint256 tokenId, uint256 price) external {
         require(petNFT.ownerOf(tokenId) == msg.sender, "You must own the pet to list it for sale");
         require(petNFT.getApproved(tokenId) == address(this), "Market must be approved to transfer pet");
-        petNFT.transferFrom(msg.sender, address(this), tokenId); // Transfer the NFT to the contract for escrow.
+        petNFT.transferFrom(msg.sender, address(this), tokenId); 
         petSales[tokenId] = Sale({
             seller: msg.sender,
             price: price,
