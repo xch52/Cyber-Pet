@@ -203,7 +203,6 @@ public class ContractServiceImpl implements ContractService {
         subscribeToAuctionCreatedEvent();
         subscribeToBidPlacedEvent();
         subscribeToAuctionEndedEvent();
-        subscribeToAuctionAutoEndedEvent();
     }
 
 
@@ -268,12 +267,6 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Async
-    public void subscribeToAuctionAutoEndedEvent() {
-        EthFilter filter = createFilter(AUCTIONAUTOENDED_EVENT, contractAddressAuction);
-        web3j.ethLogFlowable(filter).subscribe(this::handleAuctionAutoEnded, this::handleError);
-    }
-
-    @Async
     public void subscribeToBidPlacedEvent() {
         EthFilter filter = createFilter(BIDPLACED_EVENT, contractAddressAuction);
         web3j.ethLogFlowable(filter).subscribe(this::handleBidPlacedEvent, this::handleError);
@@ -332,13 +325,13 @@ public class ContractServiceImpl implements ContractService {
             );
         }
 
-        LotteryHistory lotteryHistory = LotteryHistory.builder()
-                .requester(lotteryFulfilledEventResponse.requester)
-                .requestId(lotteryFulfilledEventResponse.requestId.toString())
-                .tokenIds(tokenIds)
-                .dateTime(datetime)
-                .build();
-        System.out.println(lotteryHistory);
+//        LotteryHistory lotteryHistory = LotteryHistory.builder()
+//                .requester(lotteryFulfilledEventResponse.requester)
+//                .requestId(lotteryFulfilledEventResponse.requestId.toString())
+//                .tokenIds(tokenIds)
+//                .dateTime(datetime)
+//                .build();
+//        System.out.println(lotteryHistory);
     }
 
     private void handlePetListedEvent(Log log) {
@@ -360,8 +353,6 @@ public class ContractServiceImpl implements ContractService {
                         Updates.set("states", "1")  // 更新状态为可出售
                 )
         );
-        // System.out.println("token id: "+ petListedEventResponse.tokenId + ", seller: "+ petListedEventResponse.seller +
-        //        ", price: "+ price);
     }
 
     // states 0 不能交易
@@ -423,6 +414,25 @@ public class ContractServiceImpl implements ContractService {
 
     private void handleAuctionCreatedEvent(Log log) {
         AuctionCreatedEventResponse auctionCreatedEventResponse = getAuctionCreatedEventFromLog(log);
+        MongoCollection<Document> collection = mongoDAO.getCollection("auction_history");
+        // Construct query criteria
+        Document query = new Document("token_id", auctionCreatedEventResponse.tokenId.intValue())
+                .append("end_time", String.valueOf(convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.endTime)));
+
+        // Check whether the same combination of token_id and end_time already exists
+        try (MongoCursor<Document> cursor = collection.find(query).iterator()) {
+            if (cursor.hasNext()) {  // If matching documents are found, then return
+                return;
+            }
+        }
+
+
+        for (Auction auction : auctionList){
+            if (auction.getTokenId() == auctionCreatedEventResponse.tokenId.intValue()
+                    && auction.getEndTime() == convertToZonedDateTimeUTCPlusOne(auctionCreatedEventResponse.endTime)){
+                return;
+            }
+        }
         Auction auction = getAuctionById(auctionCreatedEventResponse.tokenId);
         auction.setSeller(auctionCreatedEventResponse.seller);
         auction.setTimestamp(auctionCreatedEventResponse.endTime);
@@ -432,7 +442,7 @@ public class ContractServiceImpl implements ContractService {
         BigDecimal reservePrice = weiToEther(auctionCreatedEventResponse.reservePrice);
         auction.setReservePrice(Double.valueOf(String.valueOf(reservePrice)));
         auctionList.add(auction);
-        System.out.println(auction);
+
 
         // Convert to long
         long timestamp = auctionCreatedEventResponse.endTime.longValue();
@@ -441,7 +451,7 @@ public class ContractServiceImpl implements ContractService {
         Date now = new Date();  // Get current time
 
         // Check whether tasks should be scheduled
-        if (date.after(now)) {
+        if (now.after(date)) {
             taskScheduler.schedule(() -> callAuctionEndedFunc(auctionCreatedEventResponse.tokenId), date);
         } else {
             // System.out.println("The task is not scheduled because the set time has passed.");
@@ -459,7 +469,6 @@ public class ContractServiceImpl implements ContractService {
                 Updates.addToSet("prebid", Double.valueOf(String.valueOf(eth)))
         );
 
-        // System.out.println("token id: "+ bidPlacedEventResponse.tokenId + ", bidder: "+ bidPlacedEventResponse.bidder + ", amount: "+ eth);
     }
 
 
@@ -491,7 +500,8 @@ public class ContractServiceImpl implements ContractService {
                                 .append("highest_bidder", auction.getHighestBidder())
                                 .append("reserve_price", auction.getReservePrice());
                         collection.insertOne(document);
-                        System.out.println(auction);
+
+                        System.out.println("Ended: "+auction);
                     } else {
                         // System.out.println("Document with same token_id and end_time already exists.");
                     }
@@ -513,12 +523,6 @@ public class ContractServiceImpl implements ContractService {
                     )
             );
         }
-    }
-
-    private void handleAuctionAutoEnded(Log log) {
-        PetAuction_abi.AuctionAutoEndedEventResponse auctionAutoEndedEventResponse = getAuctionAutoEndedEventFromLog(log);
-//        System.out.println("Auction Auto Ended： token id: " + auctionAutoEndedEventResponse.tokenId + ", winner: "
-//                + auctionAutoEndedEventResponse.winner + ", amoumt: " + auctionAutoEndedEventResponse.amount);
     }
 
 
