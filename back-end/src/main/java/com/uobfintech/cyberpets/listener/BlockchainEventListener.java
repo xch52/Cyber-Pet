@@ -5,21 +5,21 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.uobfintech.cyberpets.service.ContractService;
+import com.uobfintech.cyberpets.startup.StartupInit;
 
 @Component
 public class BlockchainEventListener {
 
-    private final ContractService contractService;
+    private final StartupInit startupInit;
 
-    public BlockchainEventListener(ContractService contractService) {
-        this.contractService = contractService;
+    public BlockchainEventListener(StartupInit startupInit) {
+        this.startupInit = startupInit;
     }
 
     @EventListener(ContextRefreshedEvent.class)
     @Async
     public void startListening() {
-        contractService.init();
+        startupInit.init();
     }
 }
 
